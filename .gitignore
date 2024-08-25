@@ -1,0 +1,16 @@
+__pycache__/
+venv/
+*.pkl
+rough_checks.ipynb
+data/
+DSApp_testing.py
+test.py
+models/
+.DS_Store
+.ipynb_checkpoints/
+clip_stage1.png
+clip_stage2.png
+noclip_stage1.png
+noclip_stage2.png
+
+
