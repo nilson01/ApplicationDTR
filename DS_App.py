@@ -26,154 +26,6 @@ from rpy2.robjects import numpy2ri
 numpy2ri.activate()
 
 
-# # Generate Data
-# def generate_and_preprocess_data(params, replication_seed, run='train'):
-
-#     # torch.manual_seed(replication_seed)
-#     sample_size = params['sample_size']
-#     device = params['device']
-
-#     if params['setting'] == 'scheme_6':
-
-#         print(" scheme_6 DGP setting ::::::::::------------------------------>>>>>>>>>>>>>>>>> ")
-#         # Generate data using PyTorch
-#         O1 = torch.randn(sample_size, 2, device=device)
-#         Z1, Z2 = torch.randn(sample_size, device=device), torch.randn(sample_size, device=device)
-#         O2 = torch.randn(sample_size, 2, device=device)
-
-#         # Probabilities for treatments, assuming it's the same as linear case
-#         pi_value = torch.full((sample_size,), 1 / 3, device=device)
-#         pi_10 = pi_11 = pi_12 = pi_20 = pi_21 = pi_22 = pi_value
-
-#         # Input preparation for Stage 1
-#         input_stage1 = O1
-#         params['input_dim_stage1'] = input_stage1.shape[1] #  (H_1)  
-#         matrix_pi1 = torch.stack((pi_10, pi_11, pi_12), dim=0).t()
-
-#         # Approach 1 S1
-#         col_names_1 = ['pi_10', 'pi_11', 'pi_12']
-#         probs1 = {name: matrix_pi1[:, idx] for idx, name in enumerate(col_names_1)}
-#         A1 = torch.randint(1, 4, (sample_size,), device=device)
-
-#         # # Approach 2 S1
-#         # result1 = A_sim(matrix_pi1, stage=1)
-#         # if  params['use_m_propen']:
-#         #     A1, _ = result1['A'], result1['probs']
-#         #     probs1 = M_propen(A1, input_stage1, stage=1)  # multinomial logistic regression with H1
-#         # else:         
-#         #     A1, probs1 = result1['A'], result1['probs']
-#         # A1 += 1
-
-#         # Reward stage 1
-#         # Constants C1, C2 and beta
-#         C1, C2 = 5.0, 5.0  # Example constants
-#         # Compute Y1 using g(O1) and A1
-#         def in_C(Ot):     
-#             # Extract Xt1 and Xt2 from O1
-#             Xt1 = Ot[:, 0].float() 
-#             Xt2 = Ot[:, 1].float()  
-
-#             # Calculate the condition
-#             return Xt2 > (Xt1**2 + torch.sin(20 * Xt1**2)).float()  # Apply float to ensure precision
-        
-#         # Compute Y1 and Y2 
-#         Y1 = A1 * (2 * in_C(O1) - 1) + C1 + Z1  
-
-#         # Input preparation for Stage 2         
-#         input_stage2 = torch.cat([O1, A1.unsqueeze(1), Y1.unsqueeze(1), O2], dim=1)
-
-#         # input_stage2 = torch.cat([O1, A1.unsqueeze(1).to(device), Y1.unsqueeze(1).to(device), O2.unsqueeze(1).to(device)], dim=1)
-#         params['input_dim_stage2'] = input_stage2.shape[1] # (H_2)
-#         matrix_pi2 = torch.stack((pi_20, pi_21, pi_22), dim=0).t()
-
-#         # Approach 1 S2
-#         col_names_2 = ['pi_20', 'pi_21', 'pi_22']
-#         probs2 = {name: matrix_pi2[:, idx] for idx, name in enumerate(col_names_2)}
-#         A2 = torch.randint(1, 4, (sample_size,), device=device)
-
-#         # # Approach 2 S2
-#         # result2 = A_sim(matrix_pi2, stage=2)
-#         # if  params['use_m_propen']:
-#         #     A2, _ = result2['A'], result2['probs']
-#         #     probs2 = M_propen(A2, input_stage2, stage=2)  # multinomial logistic regression with H2
-#         # else:         
-#         #     A2, probs2 = result2['A'], result2['probs']
-#         # A2 += 1
-
-#         # Reward stage 2
-#         Y2 = A2 * (2 * in_C(O2) - 1) + C2 + Z2 
-
-#         # # Computing optimal policy decisions 
-#         # def dt_star(Ot):
-#         #     # Ot = (Xt1, Xt2)
-#         #     Xt1 = Ot[:, 0].float() 
-#         #     Xt2 = Ot[:, 1].float()  
-#         #     # Check the condition for being in C
-#         #     in_C = (Xt2 > (Xt1**2 + torch.sin(20 * Xt1**2))).float()
-#         #     return 3 * in_C + 1 * (1 - in_C)  # in_C is 1 if true, so 3*1+1*0=3; otherwise 1  
-        
-
-#         # Computing optimal policy decisions 
-#         def dt_star(Ot):
-#             # Ot = (Xt1, Xt2)
-#             return 3 * in_C(Ot).int() + 1 * (1 - in_C(Ot).int())  # in_C is 1 if true, so 3*1+1*0=3; otherwise 1     
-           
-#         g1_opt = dt_star(O1)
-#         g2_opt = dt_star(O2)
-
-
-#     if run != 'test':
-#       # transform Y for direct search
-#       Y1, Y2 = transform_Y(Y1, Y2)
-
-#     # Propensity score stack
-#     pi_tensor_stack = torch.stack([probs1['pi_10'], probs1['pi_11'], probs1['pi_12'], probs2['pi_20'], probs2['pi_21'], probs2['pi_22']])
-
-#     # Adjusting A1 and A2 indices
-#     A1_indices = (A1 - 1).long().unsqueeze(0).to(device)  # Ensure A1 indices are on the correct device
-#     A2_indices = (A2 - 1 + 3).long().unsqueeze(0).to(device)  # Ensure A2 indices are on the correct device
-
-#     # Gathering probabilities based on actions
-#     P_A1_given_H1_tensor = torch.gather(pi_tensor_stack.to(device), dim=0, index=A1_indices).squeeze(0)  # Remove the added dimension after gathering
-#     P_A2_given_H2_tensor = torch.gather(pi_tensor_stack.to(device), dim=0, index=A2_indices).squeeze(0)  # Remove the added dimension after gathering
-
-
-#     # Calculate Ci tensor
-#     Ci = (Y1 + Y2) / (P_A1_given_H1_tensor * P_A2_given_H2_tensor)
-
-#     if run == 'test':
-#         return input_stage1, input_stage2, O2, Y1, Y2, A1, A2, P_A1_given_H1_tensor, P_A2_given_H2_tensor, g1_opt, g2_opt, Z1, Z2
-
-#     # Splitting data into training and validation sets
-#     train_size = int(params['training_validation_prop'] * sample_size)
-#     train_tensors = [tensor[:train_size] for tensor in [input_stage1, input_stage2, Ci, Y1, Y2, A1, A2]]
-#     val_tensors = [tensor[train_size:] for tensor in [input_stage1, input_stage2, Ci, Y1, Y2, A1, A2]]
-
-#     # return tuple(train_tensors), tuple(val_tensors)
-#     return tuple(train_tensors), tuple(val_tensors), tuple([O1, O2, Y1, Y2, A1, A2, pi_tensor_stack, g1_opt, g2_opt])
-
-
-
-
-
-#I needed to update the config file outside of generate function
-def update_yaml(file_path, key_to_update, new_value):
-    # Read the existing YAML file
-    with open(file_path, 'r') as file:
-        config = yaml.safe_load(file)
-    
-    # Update the value
-    if key_to_update in config:
-        config[key_to_update] = new_value
-    else:
-        print(f"Key '{key_to_update}' not found in the configuration.")
-
-    # Write the updated YAML back to the file
-    with open(file_path, 'w') as file:
-        yaml.dump(config, file, default_flow_style=False)
-
-
-
 
 
 # Generate Data
@@ -380,7 +232,7 @@ def generate_and_preprocess_data(params, replication_seed, run='train'):
     P_A2_given_H2_numpy = P_A2_given_H2_tensor.numpy()
     P_A2_given_H2_numpy = np.delete(P_A2_given_H2_numpy, combined_indices_tensor, axis=0)
     P_A2_given_H2_tensor_filtered = torch.tensor(P_A2_given_H2_numpy)
-    print("A2_H2 max, min, avg", P_A2_given_H2_tensor_filtered.max(), P_A2_given_H2_tensor_filtered.min(), torch.mean(P_A2_given_H2_tensor_filtered))
+    print("P_A2_H2 max, min, avg", P_A2_given_H2_tensor_filtered.max(), P_A2_given_H2_tensor_filtered.min(), torch.mean(P_A2_given_H2_tensor_filtered))
 
     encoded_values1 = np.delete(encoded_values1, combined_indices_tensor, axis=0)
     encoded_values2 = np.delete(encoded_values2, combined_indices_tensor, axis=0)
@@ -388,13 +240,12 @@ def generate_and_preprocess_data(params, replication_seed, run='train'):
     P_A1_given_H1_numpy = P_A1_given_H1_tensor.numpy()
     P_A1_given_H1_numpy = np.delete(P_A1_given_H1_numpy, combined_indices_tensor, axis=0)
     P_A1_given_H1_tensor_filtered = torch.tensor(P_A1_given_H1_numpy)
-    print("A1_H1 max, min, avg", P_A1_given_H1_tensor_filtered.max(), P_A1_given_H1_tensor_filtered.min(), torch.mean(P_A1_given_H1_tensor_filtered))
+    print("P_A1_H1 max, min, avg", P_A1_given_H1_tensor_filtered.max(), P_A1_given_H1_tensor_filtered.min(), torch.mean(P_A1_given_H1_tensor_filtered))
   
     pi_tensor_stack_np = pi_tensor_stack.numpy()
     pi_tensor_stack_np = np.delete(pi_tensor_stack_np, combined_indices_tensor, axis=1)
     pi_tensor_filtered = torch.tensor(pi_tensor_stack_np)
-    print("dimesnions")
-    print(pi_tensor_filtered.shape)
+    print("pi_tensor dimensions: ", pi_tensor_filtered.shape)
 
     O1_numpy = O1.numpy()
     O1_numpy = np.delete(O1_numpy, combined_indices_tensor, axis=1)
@@ -461,9 +312,6 @@ def generate_and_preprocess_data(params, replication_seed, run='train'):
     #splitting the indices into test and train (not random)
     train_patient_ids, test_patient_ids = train_test_split(unique_indexes, test_size=0.5, shuffle = False)
     #print(train_patient_ids, test_patient_ids, unique_indexes)
-    # update sample size in config file
-    # update_yaml('config.yaml', 'sample_size', len(unique_indexes))
-
 
     if run == 'test':
         #filter based on indices in test
@@ -521,28 +369,13 @@ def generate_and_preprocess_data(params, replication_seed, run='train'):
     A2_filtered = A2_filtered.float()
     # train_size = int(params['training_validation_prop'] * params['sample_size']) # this code is the main problem for divide by zero issue
     train_size = int(params['training_validation_prop'] * Y1_filtered.shape[0])
-
-    print(" train_size, params['training_validation_prop'],  params['sample_size'], Y1_filtered.shape ===================>>>>>>>>>>>>>>>>>>>> ", train_size, params['training_validation_prop'],  params['sample_size'], Y1_filtered.shape[0])
+    # print(" train_size, params['training_validation_prop'],  params['sample_size'], Y1_filtered.shape ===================>>>>>>>>>>>>>>>>>>>> ", train_size, params['training_validation_prop'],  params['sample_size'], Y1_filtered.shape[0])
 
     train_tensors = [tensor[:train_size] for tensor in [input_stage1, input_stage2, Ci, Y1_filtered, Y2_filtered, A1_filtered, A2_filtered]]
     val_tensors = [tensor[train_size:] for tensor in [input_stage1, input_stage2, Ci, Y1_filtered, Y2_filtered, A1_filtered, A2_filtered]]
 
     # return tuple(train_tensors), tuple(val_tensors)
     return tuple(train_tensors), tuple(val_tensors), tuple([O1_filtered.t(), O2_filtered.t(), Y1_filtered, Y2_filtered, A1_filtered, A2_filtered, pi_tensor_filtered])
-
-
-#     if run == 'test':
-#         return input_stage1, input_stage2, O2, Y1, Y2, A1, A2, P_A1_given_H1_tensor, P_A2_given_H2_tensor, g1_opt, g2_opt, Z1, Z2
-
-#     # Splitting data into training and validation sets
-#     train_size = int(params['training_validation_prop'] * sample_size)
-#     train_tensors = [tensor[:train_size] for tensor in [input_stage1, input_stage2, Ci, Y1, Y2, A1, A2]]
-#     val_tensors = [tensor[train_size:] for tensor in [input_stage1, input_stage2, Ci, Y1, Y2, A1, A2]]
-
-#     # return tuple(train_tensors), tuple(val_tensors)
-#     return tuple(train_tensors), tuple(val_tensors), tuple([O1, O2, Y1, Y2, A1, A2, pi_tensor_stack, g1_opt, g2_opt])
-
-
 
 
 
@@ -624,10 +457,6 @@ def DQlearning(tuple_train, tuple_val, params, config_number):
 
 def evaluate_tao(S1, S2, A1, A2, Y1, Y2, params_ds, config_number):
 
-
-    print("S1: ", S1.shape, type(S1))
-    print("S2: ", S2.shape, type(S2)) 
-
     # Convert test input from PyTorch tensor to numpy array
     S1 = S1.cpu().numpy()
     S2 = S2.cpu().numpy()
@@ -637,7 +466,7 @@ def evaluate_tao(S1, S2, A1, A2, Y1, Y2, params_ds, config_number):
 
     # Call the R function with the parameters
     results = ro.globalenv['test_ACWL'](S1, S2, A1.cpu().numpy(), A2.cpu().numpy(), Y1.cpu().numpy(), Y2.cpu().numpy(), 
-                                        config_number, params_ds['job_id'], setting=params_ds['setting'])
+                                        config_number, params_ds['job_id'])
 
     # Extract the decisions and convert to PyTorch tensors on the specified device
     A1_Tao = torch.tensor(np.array(results.rx2('g1.a1')), dtype=torch.float32).to(params_ds['device'])
@@ -677,7 +506,11 @@ def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql
     # Evaluation phase using Tao's method #
     #######################################
 
+    start_time = time.time()  # Start time recording
     A1_Tao, A2_Tao = evaluate_tao(test_input_stage1, test_O2, A1_tensor_test, A2_tensor_test, Y1_tensor, Y2_tensor, params_ds, config_number)
+    end_time = time.time()  # End time recording
+    print(f"Total time taken to run evaluate_tao: { end_time - start_time} seconds")
+    
 
     # Append to DataFrame
     new_row_Tao = {
@@ -688,11 +521,13 @@ def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql
     }
     df_Tao = pd.concat([df_Tao, pd.DataFrame([new_row_Tao])], ignore_index=True)
 
-    # Calculate policy values using the Tao estimator for Tao's method
+    # Calculate policy values fn. using the estimator of Tao's method
     # print("Tao's method estimator: ")
+    start_time = time.time()  # Start time recording
     V_rep_Tao = calculate_policy_values_W_estimator(train_tensors, params_ds, A1_Tao, A2_Tao, P_A1_g_H1, P_A2_g_H2, config_number)
-    # V_rep_Tao = calculate_policy_valuefunc(train_tensors, params_ds, A1_Tao, A2_Tao, P_A1_g_H1, P_A2_g_H2, Z1, Z2)
-        
+    end_time = time.time()  # End time recording
+    print(f"\n\nTotal time taken to run calculate_policy_values_W_estimator_tao: { end_time - start_time} seconds")
+            
     # Append policy values for Tao
     V_replications["V_replications_M1_pred"]["Tao"].append(V_rep_Tao)
 
@@ -701,8 +536,12 @@ def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql
     #######################################
     # Evaluation phase using DQL's method #
     #######################################
-
-    df_DQL, V_rep_DQL = evaluate_method('DQL', params_dql, config_number, df_DQL, test_input_stage1, A1_tensor_test, test_input_stage2, A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2)
+    start_time = time.time()  # Start time recording
+    df_DQL, V_rep_DQL = evaluate_method('DQL', params_dql, config_number, df_DQL, test_input_stage1, A1_tensor_test, test_input_stage2, 
+                                        A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2)
+    end_time = time.time()  # End time recording
+    print(f"\n\nTotal time taken to run evaluate_method)W_estimator('DQL'): { end_time - start_time} seconds")
+            
 
     # Append policy values for DQL
     V_replications["V_replications_M1_pred"]["DQL"].append(V_rep_DQL)
@@ -712,24 +551,26 @@ def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql
     ########################################
     #  Evaluation phase using DS's method  #
     ########################################
-
-    df_DS, V_rep_DS = evaluate_method('DS', params_ds, config_number, df_DS, test_input_stage1, A1_tensor_test, test_input_stage2, A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2)
-    
+    start_time = time.time()  # Start time recording
+    df_DS, V_rep_DS = evaluate_method('DS', params_ds, config_number, df_DS, test_input_stage1, A1_tensor_test, test_input_stage2, 
+                                      A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2)
+    end_time = time.time()  # End time recording
+    print(f"\n\nTotal time taken to run evaluate_method)W_estimator('DS'): { end_time - start_time} seconds")
+                
     # Append policy values for DS
     V_replications["V_replications_M1_pred"]["DS"].append(V_rep_DS)
-
 
     # Value function views
     message = f'\nY1 beh mean: {torch.mean(Y1_tensor)}, Y2 beh mean: {torch.mean(Y2_tensor)}, Y1_beh+Y2_beh mean: {torch.mean(Y1_tensor + Y2_tensor)} \n\n'
     print(message)
 
-    message = f'\nY1_DS+Y2_DS mean: {V_rep_DS} \n\n'
+    message = f'\nY1_DS+Y2_DS mean: {V_rep_DS} \n'
     print(message)
 
-    message = f'\nY1_DQL+Y2_DQL mean: {V_rep_DQL} \n\n'
+    message = f'\nY1_DQL+Y2_DQL mean: {V_rep_DQL} \n'
     print(message)
 
-    message = f'\nY1_tao+Y2_tao mean: {V_rep_Tao} \n\n'
+    message = f'\nY1_tao+Y2_tao mean: {V_rep_Tao} \n'
     print(message)
 
     return V_replications, df_DQL, df_DS, df_Tao
@@ -737,7 +578,7 @@ def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql
 
 
 
-def adaptive_contrast_tao(all_data, contrast, config_number, job_id, setting):
+def adaptive_contrast_tao(all_data, contrast, config_number, job_id):
     S1, S2, train_Y1, train_Y2, train_A1, train_A2, pi_tensor_stack = all_data
 
     # Convert all tensors to CPU and then to NumPy
@@ -758,21 +599,11 @@ def adaptive_contrast_tao(all_data, contrast, config_number, job_id, setting):
 
     # print("probs1: --------> ",probs1, probs1.shape, "\n\n\n")
 
-    # print("\n\n\n", "probs2: --------> ",probs2, probs2.shape, "\n\n\n")     
-    # print("Max values of each row: ", np.min(np.max(probs2, axis=1)) , "\n\n\n")
+    # print("\n\n\n", "probs2: --------> ",probs2, probs2.shape, "\n\n")     
+    # print("Max values of each row: ", np.min(np.max(probs2, axis=1)) , "\n\n")
 
     # Call the R function with the numpy arrays     
-    ro.globalenv['train_ACWL'](job_id, S1, S2, A1, A2, probs1, probs2, R1, R2, config_number, contrast, setting)
-
-    # results = ro.globalenv['train_ACWL'](job_id, S1, S2, A1, A2, probs1, probs2, R1, R2, config_number, contrast, setting)
-    # # Extract results
-    # select2 = results.rx2('select2')[0]
-    # select1 = results.rx2('select1')[0]
-    # selects = results.rx2('selects')[0]
-    # print("select2, select1, selects: ", select2, select1, selects)
-    # return select2, select1, selects
-
-    
+    ro.globalenv['train_ACWL'](job_id, S1, S2, A1, A2, probs1, probs2, R1, R2, config_number, contrast)
 
 
 def simulations(V_replications, params, config_number):
@@ -805,18 +636,29 @@ def simulations(V_replications, params, config_number):
         print("Training started!")
         
         # Run both models on the same tuple of data
-        # (select2, select1, selects) = adaptive_contrast_tao(adapC_tao_Data, params["contrast"], config_number, params["job_id"], params["setting"])
-        adaptive_contrast_tao(adapC_tao_Data, params["contrast"], config_number, params["job_id"], params["setting"])
+
+        start_time = time.time()  # Start time recording
+        adaptive_contrast_tao(adapC_tao_Data, params["contrast"], config_number, params["job_id"])
+        end_time = time.time()  # End time recording
+        print(f"Total time taken to run adaptive_contrast_tao: { end_time - start_time} seconds")
+        
 
         # Run both models on the same tuple of data
         params_DQL['input_dim_stage1'] = params['input_dim_stage1'] + 1 # Ex. TAO: 5 + 1 = 6 # (H_1, A_1)
         params_DQL['input_dim_stage2'] = params['input_dim_stage2'] + 1 # Ex. TAO: 7 + 1 = 8 # (H_2, A_2)
 
+        start_time = time.time()  # Start time recording
         trn_val_loss_tpl_DQL = DQlearning(tuple_train, tuple_val, params_DQL, config_number)
-
+        end_time = time.time()  # End time recording
+        print(f"Total time taken to run DQlearning: { end_time - start_time} seconds")
+        
         params_DS['input_dim_stage1'] = params['input_dim_stage1']  # Ex. TAO: 5  # (H_1, A_1)
         params_DS['input_dim_stage2'] = params['input_dim_stage2']  # Ex. TAO: 7  # (H_2, A_2)
+
+        start_time = time.time()  # Start time recording
         trn_val_loss_tpl_DS, epoch_num_model_DS = surr_opt(tuple_train, tuple_val, params_DS, config_number)
+        end_time = time.time()  # End time recording
+        print(f"Total time taken to run surr_opt: { end_time - start_time} seconds")
         
         # Append epoch model results from surr_opt
         epoch_num_model_lst.append(epoch_num_model_DS)
@@ -827,9 +669,12 @@ def simulations(V_replications, params, config_number):
         
         # eval_DTR
         print("Evaluation started")
-        V_replications, df_DQL, df_DS, df_Tao = eval_DTR(V_replications, replication, 
-                                                 df_DQL, df_DS, df_Tao,
-                                                 params_DQL, params_DS, config_number)
+        start_time = time.time()  # Start time recording
+        V_replications, df_DQL, df_DS, df_Tao = eval_DTR(V_replications, replication, df_DQL, df_DS, df_Tao, params_DQL, params_DS, config_number)
+        end_time = time.time()  # End time recording
+        print(f"Total time taken to run eval_DTR: { end_time - start_time} seconds \n\n")
+        
+
                 
     return V_replications, df_DQL, df_DS, df_Tao, losses_dict, epoch_num_model_lst
 
@@ -1101,11 +946,10 @@ def main():
     
     # Define parameter grid for grid search
     param_grid = {
-        'activation_function': ['elu'],
+        'activation_function': ['none'],
         'batch_size': [700],
         'learning_rate': [0.07],
         'num_layers': [2],
-#         'noiseless': [True, False]
     }
     # Perform operations whose output should go to the file
     run_grid_search(config, param_grid)
@@ -1129,8 +973,6 @@ class FlushFile:
 #     main()
 #     end_time = time.time()
 #     print(f'Total time taken: {end_time - start_time:.2f} seconds')
-
-    
    
     
 if __name__ == '__main__':

@@ -159,11 +159,10 @@ ensure_vector <- function(var) {
 
 
 
-
 # Work with  actions 1, 2, 3,  
-train_ACWL <- function(job_id, S1, S2, A1, A2, probs1, probs2, R1, R2, config_number, contrast = 1, setting = "tao") {
+train_ACWL <- function(job_id, S1, S2, A1, A2, probs1, probs2, R1, R2, config_number, contrast = 1) {
 
-  cat("Train model: tao, Setting: ", setting, "\n")
+  cat("Train model: tao ")
   N <- nrow(S1) 
   cat("Number of row in O1 is: ", N, "\n ")
 
@@ -270,9 +269,9 @@ train_ACWL <- function(job_id, S1, S2, A1, A2, probs1, probs2, R1, R2, config_nu
 
 
 
-test_ACWL <- function(S1, S2, A1, A2, R1, R2, config_number, job_id, setting= "tao") {
+test_ACWL <- function(S1, S2, A1, A2, R1, R2, config_number, job_id) {
 
-  cat("Test model: tao, Setting: ", setting, "\n")
+  cat("Test model: tao")
   ni <- nrow(S1) 
   cat("Number of rows in O1 is: ", ni, "\n")
 

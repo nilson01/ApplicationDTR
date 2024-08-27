@@ -148,7 +148,10 @@ def load_and_process_data(params, folder):
 
     unique_values_DQL = extract_unique_treatment_values(global_df_DQL, columns_to_process, name = "DQL")
     unique_values_DS = extract_unique_treatment_values(global_df_DS, columns_to_process, name = "DS")
-    
+
+    print("unique_values_DQL: ", unique_values_DQL)
+    print("unique_values_DS: ", unique_values_DS)
+
     train_size = int(params['training_validation_prop'] * params['sample_size'])
 
     # Process and plot results from all simulations
@@ -260,10 +263,8 @@ def M_propen(A, Xs, stage):
     # Normalize the rows to sum to 1
     s_p = s_p / s_p.sum(axis=1, keepdims=True)
 
-
-    print("s_p: ===============>>>>>>>>>>>>>>>>>>>>> ", s_p, "\n\n")
-    print("Minimum of -> Max values over each rows: ", np.min(np.max(s_p, axis=1)) , "\n\n\n")
-
+    # print("s_p: ===============>>>>>>>>>>>>>>>>>>>>> ", s_p, "\n\n")
+    print("Probs matrix Minimum of -> Max values over each rows: ", np.min(np.max(s_p, axis=1)) , "\n")
 
     if stage == 1:
         col_names = ['pi_10', 'pi_11', 'pi_12']
@@ -278,18 +279,6 @@ def M_propen(A, Xs, stage):
 
 
 # Neural networks utils
-
-# def initialize_nn(params, stage):
-#     nn = NNClass(
-#         params[f'input_dim_stage{stage}'],
-#         params[f'hidden_dim_stage{stage}'],
-#         params[f'output_dim_stage{stage}'],
-#         params['num_networks'],
-#         dropout_rate=params['dropout_rate'],
-#         activation_fn_name = params['activation_function'],
-#     ).to(params['device'])
-#     return nn
-
 def initialize_nn(params, stage):
 
     nn = NNClass(
@@ -302,7 +291,6 @@ def initialize_nn(params, stage):
         num_hidden_layers=params['num_layers'] - 1  # num_layers is the number of hidden layers
     ).to(params['device'])
     return nn
-
 
 
 def batches(N, batch_size, seed=0):
@@ -320,29 +308,45 @@ def batches(N, batch_size, seed=0):
         batch_indices = indices[start_idx:start_idx + batch_size]
         yield batch_indices
 
-        
+# The Identity class acts as a no-operation (no-op) activation function.
+#  It simply returns the input it receives without any modification. 
+class Identity(nn.Module):
+    def forward(self, x):
+        return x
+    
 class NNClass(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim, num_networks, dropout_rate, activation_fn_name, num_hidden_layers):
         super(NNClass, self).__init__()
         self.networks = nn.ModuleList()
 
         # Map the string name to the actual activation function class
-        if activation_fn_name.lower() == 'elu':
+        activation_fn_name = activation_fn_name.lower()
+        if activation_fn_name == 'elu':
             activation_fn = nn.ELU
-        elif activation_fn_name.lower() == 'relu':
+        elif activation_fn_name == 'relu':
             activation_fn = nn.ReLU
+        elif activation_fn_name == 'sigmoid':
+            activation_fn = nn.Sigmoid
+        elif activation_fn_name == 'tanh':
+            activation_fn = nn.Tanh
+        elif activation_fn_name == 'leakyrelu':
+            activation_fn = nn.LeakyReLU
+        elif activation_fn_name == 'none': # Check for 'none' and use the Identity class
+            activation_fn = Identity
         else:
             raise ValueError(f"Unsupported activation function: {activation_fn_name}")
 
         for _ in range(num_networks):
             layers = []
             layers.append(nn.Linear(input_dim, hidden_dim))
-            layers.append(activation_fn())
+            if activation_fn is not Identity:  # Only add activation if it's not Identity
+                layers.append(activation_fn())            
             layers.append(nn.Dropout(dropout_rate))
             
             for _ in range(num_hidden_layers):  # Adjusting the hidden layers count
                 layers.append(nn.Linear(hidden_dim, hidden_dim))
-                layers.append(activation_fn())
+                if activation_fn is not Identity:  # Only add activation if it's not Identity
+                    layers.append(activation_fn())
                 layers.append(nn.Dropout(dropout_rate))
                 
             layers.append(nn.Linear(hidden_dim, output_dim))
