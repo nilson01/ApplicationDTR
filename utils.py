@@ -3,8 +3,6 @@ import json
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from tqdm import tqdm
-from tqdm.notebook import tqdm
 import numpy as np
 import pandas as pd
 import pickle
@@ -744,21 +742,23 @@ def extract_value_functions_separate(V_replications):
 
     # Create DataFrames for each method
     VF_df_DQL = pd.DataFrame({
-        "Method's Value fn.": pred_data.get('DQL', []), #data_DQL["Method's Value fn."],
-        "Behavioral Value fn.": behavioral_data
+        "Method's Value fn.": pred_data.get('DQL', [None] * len(behavioral_data)),
     })
 
     VF_df_DS = pd.DataFrame({
-        "Method's Value fn.": pred_data.get('DS', []), #data_DS["Method's Value fn."],
-        "Behavioral Value fn.": behavioral_data
+        "Method's Value fn.": pred_data.get('DS', [None] * len(behavioral_data)),
     })
 
 
     VF_df_Tao = pd.DataFrame({
-        "Method's Value fn.": pred_data.get('Tao', []), #data_Tao["Method's Value fn."],
-        "Behavioral Value fn.": behavioral_data
-    })    
-    return VF_df_DQL, VF_df_DS, VF_df_Tao
+        "Method's Value fn.": pred_data.get('Tao', [None] * len(behavioral_data)),
+    })   
+
+    VF_df_Beh = pd.DataFrame({
+        "Method's Value fn.": behavioral_data,
+    })       
+    
+    return VF_df_DQL, VF_df_DS, VF_df_Tao, VF_df_Beh
 
 
 

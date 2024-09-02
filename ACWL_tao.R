@@ -1,4 +1,6 @@
 
+
+
 library(rpart)
 require(nnet)
 
@@ -162,7 +164,12 @@ ensure_vector <- function(var) {
 # Work with  actions 1, 2, 3,  
 train_ACWL <- function(job_id, S1, S2, A1, A2, probs1, probs2, R1, R2, config_number, contrast = 1) {
 
-  cat("Train model: tao ")
+  cat("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<----------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
+  cat("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<----------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
+  cat("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<----------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> \n")
+
+
+  cat("Train model: tao \n")
   N <- nrow(S1) 
   cat("Number of row in O1 is: ", N, "\n ")
 
@@ -311,18 +318,11 @@ test_ACWL <- function(S1, S2, A1, A2, R1, R2, config_number, job_id) {
   
     g1.a1[k] <- as.numeric(predict(fit1.a1, newdata = newdata1.a1, type = "class")) 
 
-    # if (!is.matrix(S2)) {   
-    if (is.matrix(S2) && (nrow(S2) == 0 || ncol(S2) == 0)) {
-      # Handle the case where S2 is empty
-      newdata2.a1 <- data.frame(S1[k, , drop = FALSE], A1[k], R1[k])     
-      colnames(newdata2.a1) <- c(colnames_S1, "A1", "R1")
-    } else {
-        # Regular case where S2 has data  
-        colnames_S2= paste("x2", 1:ncol(S2), sep="") 
-        # print("colnames_S2: ", colnames_S2)
-        newdata2.a1 <- data.frame(S1[k, , drop = FALSE], A1[k], R1[k], S2[k, , drop = FALSE])     
-        colnames(newdata2.a1) <- c(colnames_S1, "A1", "R1", colnames_S2)
-    }
+    # Regular case where S2 has data  
+    colnames_S2= paste("x2", 1:ncol(S2), sep="") 
+    # print("colnames_S2: ", colnames_S2)
+    newdata2.a1 <- data.frame(S1[k, , drop = FALSE], A1[k], R1[k], S2[k, , drop = FALSE])     
+    colnames(newdata2.a1) <- c(colnames_S1, "A1", "R1", colnames_S2)
 
     # Debug: Print the columns of newdata2.a1 to check if 'x21' is present
     # print(colnames(newdata2.a1))

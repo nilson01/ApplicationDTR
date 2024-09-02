@@ -1,10 +1,10 @@
+
 import os
 import sys
 from tqdm import tqdm
-from tqdm.notebook import tqdm
 import json
 from itertools import product
-from utils import *
+from utils import * # import utils and do utils.fn_name
 import concurrent.futures
 from concurrent.futures import ProcessPoolExecutor
 import multiprocessing
@@ -20,18 +20,18 @@ from sklearn.model_selection import train_test_split
 import random
 import math
 
-
 import rpy2.robjects as ro
 from rpy2.robjects import numpy2ri
 numpy2ri.activate()
 
-
-
+# Load the R script to avoid dynamic loading
+ro.r.source("ACWL_tao.R")
 
 # Generate Data
 def generate_and_preprocess_data(params, replication_seed, run='train'):
 
-    df = pd.read_csv('final_data.csv')
+    df = pd.read_csv('final_data.csv') #.iloc[:1000, ]  #.iloc[:params["sample_size"], ] 
+    print("df ==================> : ", df.shape, "Total data points: ",  df.shape[0]/2)
 
     # cutting off data points for faster coding purpose now
 
@@ -41,10 +41,6 @@ def generate_and_preprocess_data(params, replication_seed, run='train'):
     np.random.shuffle(groups)  # Shuffles the list of groups in place
     # Concatenate the shuffled groups back into a single DataFrame
     df = pd.concat(groups).reset_index(drop=True)
-
-
-    #sample_size = params['sample_size'] 
-    device = params['device']
 
     #IV fluid is the treatment
     O1_df = df.copy()
@@ -180,9 +176,9 @@ def generate_and_preprocess_data(params, replication_seed, run='train'):
 
     for i in range(num_rows2):
         # Get probabilities for each key for current row
-        pi_10_prob = probs2['pi_20'][i].item()
-        pi_11_prob = probs2['pi_21'][i].item()
-        pi_12_prob = probs2['pi_22'][i].item()
+        pi_20_prob = probs2['pi_20'][i].item()
+        pi_21_prob = probs2['pi_21'][i].item()
+        pi_22_prob = probs2['pi_22'][i].item()
         
         # Determine the key with the highest probability
         max_prob_key = max(probs2.keys(), key=lambda key: probs2[key][i].item())
@@ -499,81 +495,71 @@ def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql
 
     # Append policy values for DS
     V_replications["V_replications_M1_behavioral"].append(torch.mean(Y1_tensor + Y2_tensor).cpu().item())  
-
-
+    # Value function behavioral
+    message = f'\nY1 beh mean: {torch.mean(Y1_tensor)}, Y2 beh mean: {torch.mean(Y2_tensor)}, Y1_beh+Y2_beh mean: {torch.mean(Y1_tensor + Y2_tensor)} '
+    print(message)
 
     #######################################
     # Evaluation phase using Tao's method #
     #######################################
+    if params_ds.get('run_adaptive_contrast_tao', True):
+        start_time = time.time()  # Start time recording
+        A1_Tao, A2_Tao = evaluate_tao(test_input_stage1, test_O2, A1_tensor_test, A2_tensor_test, Y1_tensor, Y2_tensor, params_ds, config_number)
+        end_time = time.time()  # End time recording
+        print(f"Total time taken to run evaluate_tao: { end_time - start_time} seconds")
+        
 
-    start_time = time.time()  # Start time recording
-    A1_Tao, A2_Tao = evaluate_tao(test_input_stage1, test_O2, A1_tensor_test, A2_tensor_test, Y1_tensor, Y2_tensor, params_ds, config_number)
-    end_time = time.time()  # End time recording
-    print(f"Total time taken to run evaluate_tao: { end_time - start_time} seconds")
-    
+        # Append to DataFrame
+        new_row_Tao = {
+            'Behavioral_A1': A1_tensor_test.cpu().numpy().tolist(),
+            'Behavioral_A2': A2_tensor_test.cpu().numpy().tolist(),
+            'Predicted_A1': A1_Tao.cpu().numpy().tolist(),
+            'Predicted_A2': A2_Tao.cpu().numpy().tolist()
+        }
+        df_Tao = pd.concat([df_Tao, pd.DataFrame([new_row_Tao])], ignore_index=True)
 
-    # Append to DataFrame
-    new_row_Tao = {
-        'Behavioral_A1': A1_tensor_test.cpu().numpy().tolist(),
-        'Behavioral_A2': A2_tensor_test.cpu().numpy().tolist(),
-        'Predicted_A1': A1_Tao.cpu().numpy().tolist(),
-        'Predicted_A2': A2_Tao.cpu().numpy().tolist()
-    }
-    df_Tao = pd.concat([df_Tao, pd.DataFrame([new_row_Tao])], ignore_index=True)
-
-    # Calculate policy values fn. using the estimator of Tao's method
-    # print("Tao's method estimator: ")
-    start_time = time.time()  # Start time recording
-    V_rep_Tao = calculate_policy_values_W_estimator(train_tensors, params_ds, A1_Tao, A2_Tao, P_A1_g_H1, P_A2_g_H2, config_number)
-    end_time = time.time()  # End time recording
-    print(f"\n\nTotal time taken to run calculate_policy_values_W_estimator_tao: { end_time - start_time} seconds")
-            
-    # Append policy values for Tao
-    V_replications["V_replications_M1_pred"]["Tao"].append(V_rep_Tao)
-
-
+        # Calculate policy values fn. using the estimator of Tao's method
+        # print("Tao's method estimator: ")
+        start_time = time.time()  # Start time recording
+        V_rep_Tao = calculate_policy_values_W_estimator(train_tensors, params_ds, A1_Tao, A2_Tao, P_A1_g_H1, P_A2_g_H2, config_number)
+        end_time = time.time()  # End time recording
+        print(f"\n\nTotal time taken to run calculate_policy_values_W_estimator_tao: { end_time - start_time} seconds")
+                
+        # Append policy values for Tao
+        V_replications["V_replications_M1_pred"]["Tao"].append(V_rep_Tao)     
+        message = f'\nY1_tao+Y2_tao mean: {V_rep_Tao} \n'
+        print(message)
 
     #######################################
     # Evaluation phase using DQL's method #
     #######################################
-    start_time = time.time()  # Start time recording
-    df_DQL, V_rep_DQL = evaluate_method('DQL', params_dql, config_number, df_DQL, test_input_stage1, A1_tensor_test, test_input_stage2, 
-                                        A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2)
-    end_time = time.time()  # End time recording
-    print(f"\n\nTotal time taken to run evaluate_method)W_estimator('DQL'): { end_time - start_time} seconds")
-            
-
-    # Append policy values for DQL
-    V_replications["V_replications_M1_pred"]["DQL"].append(V_rep_DQL)
-
-
+    if params_ds.get('run_DQlearning', True):
+        start_time = time.time()  # Start time recording
+        df_DQL, V_rep_DQL = evaluate_method('DQL', params_dql, config_number, df_DQL, test_input_stage1, A1_tensor_test, test_input_stage2, 
+                                            A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2)
+        end_time = time.time()  # End time recording
+        print(f"\n\nTotal time taken to run evaluate_method)W_estimator('DQL'): { end_time - start_time} seconds")
+        # Append policy values for DQL
+        V_replications["V_replications_M1_pred"]["DQL"].append(V_rep_DQL)     
+        message = f'\nY1_DQL+Y2_DQL mean: {V_rep_DQL} '
+        print(message)
 
     ########################################
     #  Evaluation phase using DS's method  #
     ########################################
-    start_time = time.time()  # Start time recording
-    df_DS, V_rep_DS = evaluate_method('DS', params_ds, config_number, df_DS, test_input_stage1, A1_tensor_test, test_input_stage2, 
-                                      A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2)
-    end_time = time.time()  # End time recording
-    print(f"\n\nTotal time taken to run evaluate_method)W_estimator('DS'): { end_time - start_time} seconds")
-                
-    # Append policy values for DS
-    V_replications["V_replications_M1_pred"]["DS"].append(V_rep_DS)
+    if params_ds.get('run_surr_opt', True):
+        start_time = time.time()  # Start time recording
+        df_DS, V_rep_DS = evaluate_method('DS', params_ds, config_number, df_DS, test_input_stage1, A1_tensor_test, test_input_stage2, 
+                                        A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2)
+        end_time = time.time()  # End time recording
+        print(f"\n\nTotal time taken to run evaluate_method)W_estimator('DS'): { end_time - start_time} seconds\n\n")
+                    
+        # Append policy values for DS
+        V_replications["V_replications_M1_pred"]["DS"].append(V_rep_DS)
+        message = f'\nY1_DS+Y2_DS mean: {V_rep_DS} '
+        print(message)
 
-    # Value function views
-    message = f'\nY1 beh mean: {torch.mean(Y1_tensor)}, Y2 beh mean: {torch.mean(Y2_tensor)}, Y1_beh+Y2_beh mean: {torch.mean(Y1_tensor + Y2_tensor)} \n\n'
-    print(message)
-
-    message = f'\nY1_DS+Y2_DS mean: {V_rep_DS} \n'
-    print(message)
-
-    message = f'\nY1_DQL+Y2_DQL mean: {V_rep_DQL} \n'
-    print(message)
-
-    message = f'\nY1_tao+Y2_tao mean: {V_rep_Tao} \n'
-    print(message)
-
-    return V_replications, df_DQL, df_DS, df_Tao
+    return V_replications, df_DQL, df_DS, df_Tao # {"df_DQL": df_DQL, "df_DS":df_DS, "df_Tao": df_Tao}
 
 
 
@@ -627,7 +613,7 @@ def simulations(V_replications, params, config_number):
     params_DQL['num_networks'] = 1  
 
     for replication in tqdm(range(params['num_replications']), desc="Replications_M1"):
-        print(f"Replication # -------------->>>>>  {replication+1}")
+        print(f"\nReplication # -------------->>>>>  {replication+1}")
 
         # Generate and preprocess data for training
         tuple_train, tuple_val, adapC_tao_Data = generate_and_preprocess_data(params, replication_seed=replication, run='train')
@@ -635,38 +621,40 @@ def simulations(V_replications, params, config_number):
         # Estimate treatment regime : model --> surr_opt
         print("Training started!")
         
-        # Run both models on the same tuple of data
+        # Run ALL models on the same tuple of data
+        if params.get('run_adaptive_contrast_tao', True):
+            start_time = time.time()  # Start time recording
+            adaptive_contrast_tao(adapC_tao_Data, params["contrast"], config_number, params["job_id"])
+            end_time = time.time()  # End time recording
+            print(f"Total time taken to run adaptive_contrast_tao: { end_time - start_time} seconds")
+            
+        if params.get('run_DQlearning', True):
+            # Run both models on the same tuple of data
+            params_DQL['input_dim_stage1'] = params['input_dim_stage1'] + 1 # Ex. TAO: 5 + 1 = 6 # (H_1, A_1)
+            params_DQL['input_dim_stage2'] = params['input_dim_stage2'] + 1 # Ex. TAO: 7 + 1 = 8 # (H_2, A_2)
 
-        start_time = time.time()  # Start time recording
-        adaptive_contrast_tao(adapC_tao_Data, params["contrast"], config_number, params["job_id"])
-        end_time = time.time()  # End time recording
-        print(f"Total time taken to run adaptive_contrast_tao: { end_time - start_time} seconds")
-        
+            start_time = time.time()  # Start time recording
+            trn_val_loss_tpl_DQL = DQlearning(tuple_train, tuple_val, params_DQL, config_number)
+            end_time = time.time()  # End time recording
+            print(f"Total time taken to run DQlearning: { end_time - start_time} seconds")
+            # Store losses 
+            losses_dict['DQL'][replication] = trn_val_loss_tpl_DQL
+            
+        if params.get('run_surr_opt', True):
 
-        # Run both models on the same tuple of data
-        params_DQL['input_dim_stage1'] = params['input_dim_stage1'] + 1 # Ex. TAO: 5 + 1 = 6 # (H_1, A_1)
-        params_DQL['input_dim_stage2'] = params['input_dim_stage2'] + 1 # Ex. TAO: 7 + 1 = 8 # (H_2, A_2)
+            params_DS['input_dim_stage1'] = params['input_dim_stage1']  # Ex. TAO: 5  # (H_1, A_1)
+            params_DS['input_dim_stage2'] = params['input_dim_stage2']  # Ex. TAO: 7  # (H_2, A_2)
 
-        start_time = time.time()  # Start time recording
-        trn_val_loss_tpl_DQL = DQlearning(tuple_train, tuple_val, params_DQL, config_number)
-        end_time = time.time()  # End time recording
-        print(f"Total time taken to run DQlearning: { end_time - start_time} seconds")
-        
-        params_DS['input_dim_stage1'] = params['input_dim_stage1']  # Ex. TAO: 5  # (H_1, A_1)
-        params_DS['input_dim_stage2'] = params['input_dim_stage2']  # Ex. TAO: 7  # (H_2, A_2)
+            start_time = time.time()  # Start time recording
+            trn_val_loss_tpl_DS, epoch_num_model_DS = surr_opt(tuple_train, tuple_val, params_DS, config_number)
+            end_time = time.time()  # End time recording
+            print(f"Total time taken to run surr_opt: { end_time - start_time} seconds")
+            # Append epoch model results from surr_opt
+            epoch_num_model_lst.append(epoch_num_model_DS)
+            # Store losses 
+            losses_dict['DS'][replication] = trn_val_loss_tpl_DS
+            
 
-        start_time = time.time()  # Start time recording
-        trn_val_loss_tpl_DS, epoch_num_model_DS = surr_opt(tuple_train, tuple_val, params_DS, config_number)
-        end_time = time.time()  # End time recording
-        print(f"Total time taken to run surr_opt: { end_time - start_time} seconds")
-        
-        # Append epoch model results from surr_opt
-        epoch_num_model_lst.append(epoch_num_model_DS)
-        
-        # Store losses in their respective dictionaries
-        losses_dict['DQL'][replication] = trn_val_loss_tpl_DQL
-        losses_dict['DS'][replication] = trn_val_loss_tpl_DS
-        
         # eval_DTR
         print("Evaluation started")
         start_time = time.time()  # Start time recording
@@ -689,8 +677,8 @@ def run_training(config, config_updates, V_replications, config_number, replicat
     if not any(V_replications[key] for key in V_replications):
         warnings.warn("V_replications is empty. Skipping accuracy calculation.")
     else:
-        VF_df_DQL, VF_df_DS, VF_df_Tao = extract_value_functions_separate(V_replications)
-        return VF_df_DQL, VF_df_DS, VF_df_Tao, df_DQL, df_DS, df_Tao, losses_dict, epoch_num_model_lst
+        VF_df_DQL, VF_df_DS, VF_df_Tao, VF_df_Beh = extract_value_functions_separate(V_replications)
+        return VF_df_DQL, VF_df_DS, VF_df_Tao, VF_df_Beh, df_DQL, df_DS, df_Tao, losses_dict, epoch_num_model_lst
     
  
     
@@ -735,7 +723,7 @@ def run_grid_search(config, param_grid):
 
         for future in concurrent.futures.as_completed(future_to_params):
             current_config, i = future_to_params[future]            
-            performance_DQL, performance_DS, performance_Tao, df_DQL, df_DS, df_Tao, losses_dict, epoch_num_model_lst = future.result()
+            performance_DQL, performance_DS, performance_Tao, performance_Beh, df_DQL, df_DS, df_Tao, losses_dict, epoch_num_model_lst = future.result()
             
             print(f'Configuration {current_config}, replication {i} completed successfully.')
             
@@ -749,6 +737,9 @@ def run_grid_search(config, param_grid):
             performances_Tao = pd.DataFrame()
             performances_Tao = pd.concat([performances_Tao, performance_Tao], axis=0)
 
+            performances_Beh = pd.DataFrame()
+            performances_Beh = pd.concat([performance_Beh, performance_Beh], axis=0)
+
             # Update the cumulative DataFrame for DQL with the current DataFrame results
             all_dfs_DQL = pd.concat([all_dfs_DQL, df_DQL], axis=0, ignore_index=True)
 
@@ -761,7 +752,6 @@ def run_grid_search(config, param_grid):
             all_losses_dicts.append(losses_dict)
             all_epoch_num_lists.append(epoch_num_model_lst)
             
-            
             # Store and log average performance across replications for each configuration
             config_key = json.dumps(current_config, sort_keys=True)
 
@@ -769,15 +759,13 @@ def run_grid_search(config, param_grid):
             performance_DQL_mean = performances_DQL["Method's Value fn."].mean()
             performance_DS_mean = performances_DS["Method's Value fn."].mean()
             performance_Tao_mean = performances_Tao["Method's Value fn."].mean()
-
-            behavioral_DQL_mean = performances_DQL["Behavioral Value fn."].mean()  
-            behavioral_DS_mean = performances_DS["Behavioral Value fn."].mean()
-            behavioral_Tao_mean = performances_Tao["Behavioral Value fn."].mean()
+            performance_Beh_mean = performances_Beh["Method's Value fn."].mean()
 
             # Calculating the standard deviation for "Method's Value fn."
             performance_DQL_std = performances_DQL["Method's Value fn."].std()
             performance_DS_std = performances_DS["Method's Value fn."].std()
             performance_Tao_std = performances_Tao["Method's Value fn."].std()
+            performance_Beh_std = performances_Beh["Method's Value fn."].std()
 
             # Check if the configuration key exists in the results dictionary
             if config_key not in results:
@@ -785,31 +773,35 @@ def run_grid_search(config, param_grid):
                 results[config_key] = {
                     'DQL': {"Method's Value fn.": performance_DQL_mean, 
                             "Method's Value fn. SD": performance_DQL_std, 
-                            'Behavioral Value fn.': behavioral_DQL_mean},
+                            },
                     'DS': {"Method's Value fn.": performance_DS_mean, 
                            "Method's Value fn. SD": performance_DS_std,
-                           'Behavioral Value fn.': behavioral_DS_mean},
+                           },
                     'Tao': {"Method's Value fn.": performance_Tao_mean, 
                            "Method's Value fn. SD": performance_Tao_std,
-                           'Behavioral Value fn.': behavioral_Tao_mean}                
+                           },
+                    'Behavioral': {"Method's Value fn.": performance_Beh_mean, 
+                           "Method's Value fn. SD": performance_Beh_std,
+                           }    
                 }
             else:
                 # Update existing entries with new means
                 results[config_key]['DQL'].update({
                     "Method's Value fn.": performance_DQL_mean,                                 
                     "Method's Value fn. SD": performance_DQL_std, 
-                    'Behavioral Value fn.': behavioral_DQL_mean
                 })
                 results[config_key]['DS'].update({
                     "Method's Value fn.": performance_DS_mean,
                     "Method's Value fn. SD": performance_DS_std,
-                    'Behavioral Value fn.': behavioral_DS_mean
                 })
-                results[config_key]['DS'].update({
+                results[config_key]['Tao'].update({
                     "Method's Value fn.": performance_Tao_mean, 
                     "Method's Value fn. SD": performance_Tao_std,
-                    'Behavioral Value fn.': behavioral_Tao_mean
-                })            
+                })
+                results[config_key]['Behavioral'].update({
+                    "Method's Value fn.": performance_Beh_mean, 
+                    "Method's Value fn. SD": performance_Beh_std,  
+                })                
 
             print("Performances for configuration: %s", config_key)
             print("performance_DQL_mean: %s", performance_DQL_mean)
@@ -939,17 +931,19 @@ def main():
     
     print("Job ID: ", job_id)
 
-    training_validation_prop = config['training_validation_prop']
-    train_size = int(training_validation_prop * config['sample_size'])
-    print("Training size: %d", train_size)    
+    # training_validation_prop = config['training_validation_prop']
+    # train_size = int(training_validation_prop * config['sample_size'])
+    print("config['sample_size'] : %d", config['sample_size'])    
     
     
     # Define parameter grid for grid search
     param_grid = {
-        'activation_function': ['none'],
+        'activation_function': ['elu'], # elu, relu, sigmoid, tanh, leakyrelu, none
         'batch_size': [700],
-        'learning_rate': [0.07],
-        'num_layers': [2],
+        'optimizer_lr': [0.07], # 0.1, 0.01, 0.07, 0.001
+        # 'num_layers': [3], # 1,2,3,4,5,6,7
+        # 'n_epoch':[60, 150],
+        # "surrogate_num": 1  
     }
     # Perform operations whose output should go to the file
     run_grid_search(config, param_grid)

@@ -1,33 +1,50 @@
 # Network parameters configuration
-use_m_propen: False # True, False
+run_surr_opt: True
+run_DQlearning: False
+run_adaptive_contrast_tao: False
 
-f_model: DQlearning  # DQlearning, surr_opt # Model function or optimization strategy
-surrogate_num: 1  # Indicates the surrogate model configuration number
-option_sur: 4  # Specifies the operational mode or variant of the surrogate model
+
+f_model: "model_used"  # DQlearning, surr_opt, tao; will update this automatically later
 device: None  # Computation device, dynamically set to 'cuda' if GPU is available
-sample_size: 17368 # 3000 # 30000  # Number of samples to be used
-num_replications: 3 # 30, 100
+sample_size: 17368   # 3000  # Number of samples to be used -> including both stages total 36926 data points
+num_replications: 2 # 30, 100
 
 training_validation_prop: 0.8  # Proportion of data for training vs validation
-n_epoch: 150 # 60 # 150  # Number of training epochs
-batch_size: 800 #7000  # Batch size calculated as a proportion of sample size
 num_networks: 2  # Number of parallel networks or models
-activation_function: elu # elu, relu, sigmoid, tanh, leakyrelu, none
 
 output_dim_stage1: 1  # Output dimension for stage 1
 output_dim_stage2: 1  # Output dimension for stage 2
-hidden_dim_stage1: 20  # Number of neurons in the hidden layer of stage 1
-hidden_dim_stage2: 20  # Number of neurons in the hidden layer of stage 2
-dropout_rate: 0.4  # Dropout rate to prevent overfitting
-num_layers: 15
-optimizer_type: adam  # Optimizer type, can be 'adam' or 'rmsprop'
-optimizer_lr: 0.07  # Learning rate for the optimizer
 optimizer_weight_decay: 0.001  # Weight decay (L2 regularization) helps prevent overfitting
 
 use_scheduler: True # True, False
 scheduler_type: reducelronplateau  # Type of learning rate scheduler, can be 'reducelronplateau', 'steplr', or 'cosineannealing'
 scheduler_step_size: 30  # Step size for StepLR, defines the number of epochs before the next LR decay
 scheduler_gamma: 0.8  # Decay rate for learning rate under StepLR
+
+
+activation_function: elu # elu, relu, sigmoid, tanh, leakyrelu, none
+batch_size: 800 #7000  # Batch size calculated as a proportion of sample size
+optimizer_lr: 0
+num_layers: 2
+n_epoch: 60 # 150 # 60 # 150  # Number of training epochs
+hidden_dim_stage1: 20  # Number of neurons in the hidden layer of stage 1
+hidden_dim_stage2: 20  # Number of neurons in the hidden layer of stage 2
+dropout_rate: 0.4  # Dropout rate to prevent overfitting
+optimizer_type: adam  # 'adam' or 'rmsprop'
+
+
+surrogate_num: 1  # Indicates the surrogate model configuration number
+option_sur: 4  # Specifies the operational mode or variant of the surrogate model
+contrast: 1
 initializer: he  # He initialization method (Kaiming initialization)
 
-contrast: 1
+
+
+# 'activation_function': ['elu'], # elu, relu, sigmoid, tanh, leakyrelu, none
+# 'batch_size': [700],
+# 'optimizer_lr': [0.07], # 0.1, 0.01, 0.07, 0.001
+# # 'num_layers': [3], # 1,2,3,4,5,6,7
+# # 'n_epoch':[60, 150],
+# # "surrogate_num": 1  
+
+
