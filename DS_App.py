@@ -13,12 +13,12 @@ from datetime import datetime
 import copy
 from collections import defaultdict
 
-from sklearn import preprocessing
-import seaborn as sns
-from sklearn import metrics
+# from sklearn import preprocessing
+# import seaborn as sns
+# from sklearn import metrics
 from sklearn.model_selection import train_test_split
-import random
-import math
+# import random
+# import math
 
 import rpy2.robjects as ro
 from rpy2.robjects import numpy2ri
@@ -30,10 +30,9 @@ ro.r.source("ACWL_tao.R")
 # Generate Data
 def generate_and_preprocess_data(params, replication_seed, run='train'):
 
-    df = pd.read_csv('final_data.csv') #.iloc[:1000, ]  #.iloc[:params["sample_size"], ] 
+    # cutting off data points for faster testing
+    df = pd.read_csv('final_data.csv')# .iloc[:10000, ]  #.iloc[:params["sample_size"], ] 
     print("df ==================> : ", df.shape, "Total data points: ",  df.shape[0]/2)
-
-    # cutting off data points for faster coding purpose now
 
     # Shuffle
     #sample the rows creating a random order
@@ -145,74 +144,75 @@ def generate_and_preprocess_data(params, replication_seed, run='train'):
     P_A2_given_H2_tensor = torch.gather(pi_tensor_stack, dim=0, index=A2_indices).squeeze(0)  # Remove the added dimension after gathering
 
 
-    #here the clipping starts with encoding A
-    label_encoder = preprocessing.LabelEncoder()
-    A2_enc = label_encoder.fit_transform(A2)
-    A1_enc = label_encoder.fit_transform(A1)
+    # #here the clipping starts with encoding A
+    # label_encoder = preprocessing.LabelEncoder()
+    # A2_enc = label_encoder.fit_transform(A2)
+    # A1_enc = label_encoder.fit_transform(A1)
 
-    num_rows1 = len(probs1['pi_10'])
-    num_rows2 = len(probs2['pi_20'])
+    # num_rows1 = len(probs1['pi_10'])
+    # num_rows2 = len(probs2['pi_20'])
 
-    # Initialize encoded values list
-    encoded_values1 = []
-    encoded_values2 = []
-    #need for stage 1 and stage 2
-    # Iterate through each row
-    for i in range(num_rows1):
-        pi_10_prob = probs1['pi_10'][i].item()
-        pi_11_prob = probs1['pi_11'][i].item()
-        pi_12_prob = probs1['pi_12'][i].item()
+    # # Initialize encoded values list
+    # encoded_values1 = []
+    # encoded_values2 = []
+    # #need for stage 1 and stage 2
+    # # Iterate through each row
+    # for i in range(num_rows1):
+    #     pi_10_prob = probs1['pi_10'][i].item()
+    #     pi_11_prob = probs1['pi_11'][i].item()
+    #     pi_12_prob = probs1['pi_12'][i].item()
         
-        # Determine the key with the highest probability
-        max_prob_key = max(probs1.keys(), key=lambda key: probs1[key][i].item())
+    #     # Determine the key with the highest probability
+    #     max_prob_key = max(probs1.keys(), key=lambda key: probs1[key][i].item())
         
-        # Encode based on the key with the highest probability
-        if max_prob_key == 'pi_10':
-            encoded_values1.append(0)
-        elif max_prob_key == 'pi_11':
-            encoded_values1.append(1)
-        elif max_prob_key == 'pi_12':
-            encoded_values1.append(2)
+    #     # Encode based on the key with the highest probability
+    #     if max_prob_key == 'pi_10':
+    #         encoded_values1.append(0)
+    #     elif max_prob_key == 'pi_11':
+    #         encoded_values1.append(1)
+    #     elif max_prob_key == 'pi_12':
+    #         encoded_values1.append(2)
 
-    for i in range(num_rows2):
-        # Get probabilities for each key for current row
-        pi_20_prob = probs2['pi_20'][i].item()
-        pi_21_prob = probs2['pi_21'][i].item()
-        pi_22_prob = probs2['pi_22'][i].item()
+    # for i in range(num_rows2):
+    #     # Get probabilities for each key for current row
+    #     pi_20_prob = probs2['pi_20'][i].item()
+    #     pi_21_prob = probs2['pi_21'][i].item()
+    #     pi_22_prob = probs2['pi_22'][i].item()
         
-        # Determine the key with the highest probability
-        max_prob_key = max(probs2.keys(), key=lambda key: probs2[key][i].item())
+    #     # Determine the key with the highest probability
+    #     max_prob_key = max(probs2.keys(), key=lambda key: probs2[key][i].item())
         
-        # Encode based on the key with the highest probability
-        if max_prob_key == 'pi_20':
-            encoded_values2.append(0)
-        elif max_prob_key == 'pi_21':
-            encoded_values2.append(1)
-        elif max_prob_key == 'pi_22':
-            encoded_values2.append(2)
+    #     # Encode based on the key with the highest probability
+    #     if max_prob_key == 'pi_20':
+    #         encoded_values2.append(0)
+    #     elif max_prob_key == 'pi_21':
+    #         encoded_values2.append(1)
+    #     elif max_prob_key == 'pi_22':
+    #         encoded_values2.append(2)
 
 
-    encoded_values1 = np.array(encoded_values1)
-    encoded_values2 = np.array(encoded_values2)
-    cm0 = metrics.confusion_matrix(A1_enc, encoded_values1) #stage 1 confusion
-    cm1 = metrics.confusion_matrix(A2_enc, encoded_values2) #stage 2 confusion
 
-    # Plotting first confusion matrix
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(cm0, annot=True, cmap='Blues', fmt='d', cbar=False)
-    plt.xlabel('Predicted labels')
-    plt.ylabel('True labels')
-    plt.title('No Clipping Stage1')
-    plt.savefig('noclip_stage1.png')
-    plt.close()
-    #plot stage 2 no clip
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(cm1, annot=True, cmap='Blues', fmt='d', cbar=False)
-    plt.xlabel('Predicted labels')
-    plt.ylabel('True labels')
-    plt.title('No Clipping Stage2')
-    plt.savefig('noclip_stage2.png')
-    plt.close()
+    # encoded_values1 = np.array(encoded_values1)
+    # encoded_values2 = np.array(encoded_values2)
+    # cm0 = metrics.confusion_matrix(A1_enc, encoded_values1) #stage 1 confusion
+    # cm1 = metrics.confusion_matrix(A2_enc, encoded_values2) #stage 2 confusion
+
+    # # Plotting first confusion matrix
+    # plt.figure(figsize=(8, 6))
+    # sns.heatmap(cm0, annot=True, cmap='Blues', fmt='d', cbar=False)
+    # plt.xlabel('Predicted labels')
+    # plt.ylabel('True labels')
+    # plt.title('No Clipping Stage1')
+    # plt.savefig('noclip_stage1.png')
+    # plt.close()
+    # #plot stage 2 no clip
+    # plt.figure(figsize=(8, 6))
+    # sns.heatmap(cm1, annot=True, cmap='Blues', fmt='d', cbar=False)
+    # plt.xlabel('Predicted labels')
+    # plt.ylabel('True labels')
+    # plt.title('No Clipping Stage2')
+    # plt.savefig('noclip_stage2.png')
+    # plt.close()
 
 
 
@@ -228,10 +228,12 @@ def generate_and_preprocess_data(params, replication_seed, run='train'):
     P_A2_given_H2_numpy = P_A2_given_H2_tensor.numpy()
     P_A2_given_H2_numpy = np.delete(P_A2_given_H2_numpy, combined_indices_tensor, axis=0)
     P_A2_given_H2_tensor_filtered = torch.tensor(P_A2_given_H2_numpy)
+
+
     print("P_A2_H2 max, min, avg", P_A2_given_H2_tensor_filtered.max(), P_A2_given_H2_tensor_filtered.min(), torch.mean(P_A2_given_H2_tensor_filtered))
 
-    encoded_values1 = np.delete(encoded_values1, combined_indices_tensor, axis=0)
-    encoded_values2 = np.delete(encoded_values2, combined_indices_tensor, axis=0)
+    # encoded_values1 = np.delete(encoded_values1, combined_indices_tensor, axis=0)
+    # encoded_values2 = np.delete(encoded_values2, combined_indices_tensor, axis=0)
 
     P_A1_given_H1_numpy = P_A1_given_H1_tensor.numpy()
     P_A1_given_H1_numpy = np.delete(P_A1_given_H1_numpy, combined_indices_tensor, axis=0)
@@ -243,52 +245,47 @@ def generate_and_preprocess_data(params, replication_seed, run='train'):
     pi_tensor_filtered = torch.tensor(pi_tensor_stack_np)
     print("pi_tensor dimensions: ", pi_tensor_filtered.shape)
 
-    O1_numpy = O1.numpy()
-    O1_numpy = np.delete(O1_numpy, combined_indices_tensor, axis=1)
+    O1_numpy = np.delete(O1.numpy(), combined_indices_tensor, axis=1)
     O1_filtered = torch.tensor(O1_numpy)
 
-    O2_numpy = O2.numpy()
-    O2_numpy = np.delete(O2_numpy, combined_indices_tensor, axis=1)
+    O2_numpy = np.delete(O2.numpy(), combined_indices_tensor, axis=1)
     O2_filtered = torch.tensor(O2_numpy)
 
-    A1_numpy = A1.numpy()
-    A1_numpy = np.delete(A1_numpy, combined_indices_tensor, axis=0)
+    A1_numpy = np.delete(A1.numpy(), combined_indices_tensor, axis=0)
     A1_filtered = torch.tensor(A1_numpy)
 
-    A2_numpy = A2.numpy()
-    A2_numpy = np.delete(A2_numpy, combined_indices_tensor, axis=0)
+    A2_numpy = np.delete(A2.numpy(), combined_indices_tensor, axis=0)
     A2_filtered = torch.tensor(A2_numpy)
 
-    Y1_numpy = Y1.numpy()
-    Y1_numpy = np.delete(Y1_numpy, combined_indices_tensor, axis=0)
+    Y1_numpy = np.delete(Y1.numpy(), combined_indices_tensor, axis=0)
     Y1_filtered = torch.tensor(Y1_numpy)
 
-    Y2_numpy = Y2.numpy()
-    Y2_numpy = np.delete(Y2_numpy, combined_indices_tensor, axis=0)
+    Y2_numpy = np.delete(Y2.numpy(), combined_indices_tensor, axis=0)
     Y2_filtered = torch.tensor(Y2_numpy)
-  
-    label_encoder = preprocessing.LabelEncoder()
-    A2filt_enc = label_encoder.fit_transform(A2_filtered)
-    A1filt_enc = label_encoder.fit_transform(A1_filtered)
-    #create and plot confusion matrices after clipping
-    cm2 = metrics.confusion_matrix(A1filt_enc, encoded_values1)
-    cm3 = metrics.confusion_matrix(A2filt_enc, encoded_values2)
-  
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(cm2, annot=True, cmap='Blues', fmt='d', cbar=False)
-    plt.xlabel('Predicted labels')
-    plt.ylabel('True labels')
-    plt.title('After Clipping Stage1')
-    plt.savefig('clip_stage1.png')
-    plt.close()
 
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(cm3, annot=True, cmap='Blues', fmt='d', cbar=False)
-    plt.xlabel('Predicted labels')
-    plt.ylabel('True labels')
-    plt.title('After Clipping Stage2')
-    plt.savefig('clip_stage2.png')
-    plt.close()
+
+    # label_encoder = preprocessing.LabelEncoder()
+    # A2filt_enc = label_encoder.fit_transform(A2_filtered)
+    # A1filt_enc = label_encoder.fit_transform(A1_filtered)
+    # #create and plot confusion matrices after clipping
+    # cm2 = metrics.confusion_matrix(A1filt_enc, encoded_values1)
+    # cm3 = metrics.confusion_matrix(A2filt_enc, encoded_values2)
+  
+    # plt.figure(figsize=(8, 6))
+    # sns.heatmap(cm2, annot=True, cmap='Blues', fmt='d', cbar=False)
+    # plt.xlabel('Predicted labels')
+    # plt.ylabel('True labels')
+    # plt.title('After Clipping Stage1')
+    # plt.savefig('clip_stage1.png')
+    # plt.close()
+
+    # plt.figure(figsize=(8, 6))
+    # sns.heatmap(cm3, annot=True, cmap='Blues', fmt='d', cbar=False)
+    # plt.xlabel('Predicted labels')
+    # plt.ylabel('True labels')
+    # plt.title('After Clipping Stage2')
+    # plt.savefig('clip_stage2.png')
+    # plt.close()
     #done with all clipping
 
     # Calculate Ci tensor
@@ -297,8 +294,8 @@ def generate_and_preprocess_data(params, replication_seed, run='train'):
     input_stage1 = O1_filtered.t()
     input_stage2 = torch.cat([O1_filtered.t(), A1_filtered.unsqueeze(1), Y1_filtered.unsqueeze(1), O2_filtered.t()], dim=1) 
 
-    #here I just need an updated set of indices (after clipping)
-    #not necessary to sort by patient id since stages are split, also some tensors dont have ids (P_A1_H1)
+    # here I just need an updated set of indices (after clipping)
+    # not necessary to sort by patient id since stages are split, also some tensors dont have ids (P_A1_H1)
     numpy_array = O1_filtered.numpy()
     df = pd.DataFrame(numpy_array)
     column_headings = df.columns
@@ -469,20 +466,6 @@ def evaluate_tao(S1, S2, A1, A2, Y1, Y2, params_ds, config_number):
     A2_Tao = torch.tensor(np.array(results.rx2('g2.a1')), dtype=torch.float32).to(params_ds['device'])
 
     return A1_Tao, A2_Tao
-
-
-
-# def calculate_policy_valuefunc(train_tensors, params, A1_di, A2_di, P_A1_g_H1, P_A2_g_H2, Z1, Z2):
-
-#     _, input_stage2, Y1, Y2, A1, A2 = train_tensors
-#     O1, _, _, O2 = input_stage2 
-
-#     Y1_di = calculateRewardS1(O1, A1_di, Z1)
-#     Y2_di = calculateRewardS2(O1, O2, A1_di, A2_di, Z1, Z2 )
-
-
-#     return torch.mean(Y1_di + Y2_di)
-
 
 
 # def eval_DTR(V_replications, num_replications, nn_stage1_DQL, nn_stage2_DQL, nn_stage1_DS, nn_stage2_DS, df_DQL, df_DS, df_Tao, params_dql, params_ds, config_number):
@@ -928,20 +911,18 @@ def main():
         job_id = datetime.now().strftime('%Y%m%d%H%M%S')  # Format: YYYYMMDDHHMMSS
     
     config['job_id'] = job_id
-    
-    print("Job ID: ", job_id)
+    print("Job ID: ", job_id) 
 
     # training_validation_prop = config['training_validation_prop']
     # train_size = int(training_validation_prop * config['sample_size'])
     print("config['sample_size'] : %d", config['sample_size'])    
     
-    
     # Define parameter grid for grid search
     param_grid = {
-        'activation_function': ['elu'], # elu, relu, sigmoid, tanh, leakyrelu, none
-        'batch_size': [700],
+        'activation_function': [ 'none'], # elu, relu, sigmoid, tanh, leakyrelu, none
+        'batch_size': [10, 25, 200], # 50
         'optimizer_lr': [0.07], # 0.1, 0.01, 0.07, 0.001
-        # 'num_layers': [3], # 1,2,3,4,5,6,7
+        'num_layers': [2, 4], # 1,2,3,4,5,6,7
         # 'n_epoch':[60, 150],
         # "surrogate_num": 1  
     }
