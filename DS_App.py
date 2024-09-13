@@ -28,10 +28,10 @@ numpy2ri.activate()
 ro.r.source("ACWL_tao.R")
 
 # Generate Data
-def generate_and_preprocess_data(params, replication_seed, run='train'):
+def load_and_preprocess_data(params, replication_seed, run='train'):
 
     # cutting off data points for faster testing
-    df = pd.read_csv('final_data.csv')# .iloc[:10000, ]  #.iloc[:params["sample_size"], ] 
+    df = pd.read_csv('final_data.csv').iloc[:3000, ]  #.iloc[:params["sample_size"], ] 
     print("df ==================> : ", df.shape, "Total data points: ",  df.shape[0]/2)
 
     # Shuffle
@@ -472,7 +472,7 @@ def evaluate_tao(S1, S2, A1, A2, Y1, Y2, params_ds, config_number):
 def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql, params_ds, config_number):
 
     # Generate and preprocess data for evaluation
-    processed_result = generate_and_preprocess_data(params_ds, replication_seed=num_replications, run='test')
+    processed_result = load_and_preprocess_data(params_ds, replication_seed=num_replications, run='test')
     test_input_stage1, test_input_stage2, test_O2, Y1_tensor, Y2_tensor, A1_tensor_test, A2_tensor_test, P_A1_g_H1, P_A2_g_H2  = processed_result
     train_tensors = [test_input_stage1, test_input_stage2, Y1_tensor, Y2_tensor, A1_tensor_test, A2_tensor_test]
 
@@ -575,7 +575,7 @@ def adaptive_contrast_tao(all_data, contrast, config_number, job_id):
     ro.globalenv['train_ACWL'](job_id, S1, S2, A1, A2, probs1, probs2, R1, R2, config_number, contrast)
 
 
-def simulations(V_replications, params, config_number):
+def simulations(V_replications, params, config_fixed, config_number):
 
     columns = ['Behavioral_A1', 'Behavioral_A2', 'Predicted_A1', 'Predicted_A2']
 
@@ -587,19 +587,32 @@ def simulations(V_replications, params, config_number):
     losses_dict = {'DQL': {}, 'DS': {}} 
     epoch_num_model_lst = []
     
-    # Clone the original config for DQlearning and surr_opt
-    params_DQL = copy.deepcopy(params)
-    params_DS = copy.deepcopy(params)
+    # Clone the updated config for DQlearning and surr_opt
+    params_DQL_u = copy.deepcopy(params)
+    params_DS_u = copy.deepcopy(params)
     
-    params_DS['f_model'] = 'surr_opt'
-    params_DQL['f_model'] = 'DQlearning'
-    params_DQL['num_networks'] = 1  
+    params_DS_u['f_model'] = 'surr_opt'
+    params_DQL_u['f_model'] = 'DQlearning'
+    params_DQL_u['num_networks'] = 1  
+
+    # Clone the fixed config for DQlearning and surr_opt
+    config_fixed['num_layers'] = params['num_layers']
+    config_fixed['hidden_dim_stage1'] = params['hidden_dim_stage1']
+    config_fixed['hidden_dim_stage2'] = params['hidden_dim_stage2']
+    config_fixed['activation_function'] = params['activation_function']
+
+    params_DQL_f = copy.deepcopy(config_fixed)
+    params_DS_f = copy.deepcopy(config_fixed)
+    
+    params_DS_f['f_model'] = 'surr_opt'
+    params_DQL_f['f_model'] = 'DQlearning'
+    params_DQL_f['num_networks'] = 1  
 
     for replication in tqdm(range(params['num_replications']), desc="Replications_M1"):
         print(f"\nReplication # -------------->>>>>  {replication+1}")
 
         # Generate and preprocess data for training
-        tuple_train, tuple_val, adapC_tao_Data = generate_and_preprocess_data(params, replication_seed=replication, run='train')
+        tuple_train, tuple_val, adapC_tao_Data = load_and_preprocess_data(params, replication_seed=replication, run='train')
 
         # Estimate treatment regime : model --> surr_opt
         print("Training started!")
@@ -613,49 +626,53 @@ def simulations(V_replications, params, config_number):
             
         if params.get('run_DQlearning', True):
             # Run both models on the same tuple of data
-            params_DQL['input_dim_stage1'] = params['input_dim_stage1'] + 1 # Ex. TAO: 5 + 1 = 6 # (H_1, A_1)
-            params_DQL['input_dim_stage2'] = params['input_dim_stage2'] + 1 # Ex. TAO: 7 + 1 = 8 # (H_2, A_2)
+            params_DQL_u['input_dim_stage1'] = params['input_dim_stage1'] + 1 # Ex. TAO: 5 + 1 = 6 # (H_1, A_1)
+            params_DQL_u['input_dim_stage2'] = params['input_dim_stage2'] + 1 # Ex. TAO: 7 + 1 = 8 # (H_2, A_2)
+
+            params_DQL_f['input_dim_stage1'] = params['input_dim_stage1'] + 1 # Ex. TAO: 5 + 1 = 6 # (H_1, A_1)
+            params_DQL_f['input_dim_stage2'] = params['input_dim_stage2'] + 1 # Ex. TAO: 7 + 1 = 8 # (H_2, A_2)
 
             start_time = time.time()  # Start time recording
-            trn_val_loss_tpl_DQL = DQlearning(tuple_train, tuple_val, params_DQL, config_number)
+            trn_val_loss_tpl_DQL = DQlearning(tuple_train, tuple_val, params_DQL_u, config_number)
             end_time = time.time()  # End time recording
             print(f"Total time taken to run DQlearning: { end_time - start_time} seconds")
             # Store losses 
-            losses_dict['DQL'][replication] = trn_val_loss_tpl_DQL
+            losses_dict['DQL'][replication] = trn_val_loss_tpl_DQL 
             
         if params.get('run_surr_opt', True):
 
-            params_DS['input_dim_stage1'] = params['input_dim_stage1']  # Ex. TAO: 5  # (H_1, A_1)
-            params_DS['input_dim_stage2'] = params['input_dim_stage2']  # Ex. TAO: 7  # (H_2, A_2)
+            params_DS_u['input_dim_stage1'] = params['input_dim_stage1']  # Ex. TAO: 5  # (H_1, A_1)
+            params_DS_u['input_dim_stage2'] = params['input_dim_stage2']  # Ex. TAO: 7  # (H_2, A_2)
+
+            params_DS_f['input_dim_stage1'] = params['input_dim_stage1']  # Ex. TAO: 5  # (H_1, A_1)
+            params_DS_f['input_dim_stage2'] = params['input_dim_stage2']  # Ex. TAO: 7  # (H_2, A_2)
 
             start_time = time.time()  # Start time recording
-            trn_val_loss_tpl_DS, epoch_num_model_DS = surr_opt(tuple_train, tuple_val, params_DS, config_number)
+            trn_val_loss_tpl_DS, epoch_num_model_DS = surr_opt(tuple_train, tuple_val, params_DS_u, config_number)
             end_time = time.time()  # End time recording
             print(f"Total time taken to run surr_opt: { end_time - start_time} seconds")
             # Append epoch model results from surr_opt
             epoch_num_model_lst.append(epoch_num_model_DS)
             # Store losses 
             losses_dict['DS'][replication] = trn_val_loss_tpl_DS
-            
 
         # eval_DTR
         print("Evaluation started")
         start_time = time.time()  # Start time recording
-        V_replications, df_DQL, df_DS, df_Tao = eval_DTR(V_replications, replication, df_DQL, df_DS, df_Tao, params_DQL, params_DS, config_number)
+        V_replications, df_DQL, df_DS, df_Tao = eval_DTR(V_replications, replication, df_DQL, df_DS, df_Tao, params_DQL_f, params_DS_f, config_number)
+        # V_replications, df_DQL, df_DS, df_Tao = eval_DTR(V_replications, replication, df_DQL, df_DS, df_Tao, params_DQL_u, params_DS_u, config_number)
         end_time = time.time()  # End time recording
         print(f"Total time taken to run eval_DTR: { end_time - start_time} seconds \n\n")
-        
-
                 
     return V_replications, df_DQL, df_DS, df_Tao, losses_dict, epoch_num_model_lst
 
 
-def run_training(config, config_updates, V_replications, config_number, replication_seed):
+def run_training(config, config_fixed, config_updates, V_replications, config_number, replication_seed):
     torch.manual_seed(replication_seed)
     local_config = {**config, **config_updates}  # Create a local config that includes both global settings and updates
     
     # Execute the simulation function using updated settings
-    V_replications, df_DQL, df_DS, df_Tao, losses_dict, epoch_num_model_lst = simulations(V_replications, local_config, config_number)
+    V_replications, df_DQL, df_DS, df_Tao, losses_dict, epoch_num_model_lst = simulations(V_replications, local_config, config_fixed, config_number)
     
     if not any(V_replications[key] for key in V_replications):
         warnings.warn("V_replications is empty. Skipping accuracy calculation.")
@@ -669,11 +686,11 @@ def run_training(config, config_updates, V_replications, config_number, replicat
 
 def run_training_with_params(params):
 
-    config, current_config, V_replications, i, config_number = params
-    return run_training(config, current_config, V_replications, config_number, replication_seed=i)
+    config, config_fixed, current_config, V_replications, i, config_number = params
+    return run_training(config, config_fixed, current_config, V_replications, config_number, replication_seed=i)
  
 
-def run_grid_search(config, param_grid):
+def run_grid_search(config, config_fixed, param_grid):
     # Initialize for storing results and performance metrics
     results = {}
     # Initialize separate cumulative DataFrames for DQL and DS
@@ -700,7 +717,7 @@ def run_grid_search(config, param_grid):
                     "V_replications_M1_pred": defaultdict(list),
                     "V_replications_M1_behavioral": [],
                 }
-                params = (config, current_config, V_replications, i, config_number)
+                params = (config, config_fixed, current_config, V_replications, i, config_number)
                 future = executor.submit(run_training_with_params, params)
                 future_to_params[future] = (current_config, i)
 
@@ -915,19 +932,24 @@ def main():
 
     # training_validation_prop = config['training_validation_prop']
     # train_size = int(training_validation_prop * config['sample_size'])
-    print("config['sample_size'] : %d", config['sample_size'])    
+    print("config['sample_size'] : %d", config['sample_size'])   
+
+    config_fixed = copy.deepcopy(config)
     
     # Define parameter grid for grid search
     param_grid = {
-        'activation_function': [ 'none'], # elu, relu, sigmoid, tanh, leakyrelu, none
-        'batch_size': [10, 25, 200], # 50
+        'activation_function': ['none'], # elu, relu, sigmoid, tanh, leakyrelu, none
+        'batch_size': [25], # 50
         'optimizer_lr': [0.07], # 0.1, 0.01, 0.07, 0.001
-        'num_layers': [2, 4], # 1,2,3,4,5,6,7
-        # 'n_epoch':[60, 150],
-        # "surrogate_num": 1  
+        'num_layers': [4], # 2,4
+        'n_epoch':[60], # 150
+        'surrogate_num': [1, 2],
+        'option_sur': [1, 2],
+        'hidden_dim_stage1': [20],
+        'hidden_dim_stage2':[20]
     }
     # Perform operations whose output should go to the file
-    run_grid_search(config, param_grid)
+    run_grid_search(config, config_fixed, param_grid)
     
 
 class FlushFile:

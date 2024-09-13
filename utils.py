@@ -767,12 +767,12 @@ def extract_value_functions_separate(V_replications):
 def compute_phi(x, option):
     if option == 1:
         return 1 + torch.tanh(5*x)
-    elif option == 2:
-        return 1 + 2 * torch.atan(torch.pi * x / 2) / torch.pi
+    elif option == 2:         
+        return 1 + x / (1 + torch.abs(x))
     elif option == 3:
         return 1 + x / torch.sqrt(1 + x ** 2)
-    elif option == 4:
-        return 1 + x / (1 + torch.abs(x))
+    elif option == 4:        
+        return 1 + 2 * torch.atan(torch.pi * x / 2) / torch.pi
     elif option == 5:
         return torch.where(x >= 0, torch.tensor(1.0), torch.tensor(0.0))
     else:
@@ -1243,7 +1243,8 @@ def train_and_evaluate(train_data, val_data, test_data, params, config_number, r
 
     # Update specific values in param_W
     param_W.update({
-      'num_networks': 1,
+        'num_networks': 1,
+        'activation_function': 'elu', #'elu', 'relu', 'sigmoid', 'tanh', 'leakyrelu', 'none' # comment this if need to parallelize over eval
     })
         
     if params["f_model"]!="DQlearning":
