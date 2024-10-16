@@ -1505,15 +1505,7 @@ def evaluate_method(method_name, params, config_number, df, test_input_stage1, A
         'hidden_dim_stage1': tmp[1], #initial_config['hidden_dim_stage1'],
         'hidden_dim_stage2': tmp[2], #initial_config['hidden_dim_stage2']
         'activation_function': tmp[3], #initial_config['activation_function'], #'elu', 'relu', 'sigmoid', 'tanh', 'leakyrelu', 'none' 
-    })
-    # print(f"<<<<<<<<<<<<<--------------  {tmp} --------------->>>>>>>>>>>>>>>>>")
-    # param_W.update({
-    #         'num_layers':  tmp[0], #initial_config['num_layers'],
-    #         'hidden_dim_stage1': tmp[1], #initial_config['hidden_dim_stage1'],
-    #         'hidden_dim_stage2': tmp[2], #initial_config['hidden_dim_stage2']
-    #         'activation_function': tmp[3], #initial_config['activation_function'], #'elu', 'relu', 'sigmoid', 'tanh', 'leakyrelu', 'none' 
-    #     })
-
+    }) 
         
     if params["f_model"]!="DQlearning":
         param_W.update({

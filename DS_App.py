@@ -31,7 +31,7 @@ ro.r.source("ACWL_tao.R")
 def load_and_preprocess_data(params, replication_seed, run='train'):
 
     # cutting off data points for faster testing
-    df = pd.read_csv('final_data.csv').iloc[:2000, ]  #.iloc[:params["sample_size"], ] 
+    df = pd.read_csv('final_data.csv') #.iloc[:2000, ]  #.iloc[:params["sample_size"], ] 
     print("df ==================> : ", df.shape, "Total data points: ",  df.shape[0]/2)
 
     # Shuffle
