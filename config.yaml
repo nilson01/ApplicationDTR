@@ -1,7 +1,8 @@
 # Network parameters configuration
 run_surr_opt: True
-run_DQlearning: False
+run_DQlearning: True
 run_adaptive_contrast_tao: False
+trainingFixed: True # True, False
 
 
 f_model: "model_used"  # DQlearning, surr_opt, tao; will update this automatically later
@@ -22,9 +23,9 @@ scheduler_step_size: 30  # Step size for StepLR, defines the number of epochs be
 scheduler_gamma: 0.8  # Decay rate for learning rate under StepLR
 
 activation_function: elu # elu, relu, sigmoid, tanh, leakyrelu, none # # CHANGEd INSIDE
-batch_size: 700 #7000  # Batch size calculated as a proportion of sample size
+batch_size: 700 # Batch size calculated as a proportion of sample size
 optimizer_lr: 0
-num_layers: 2 # CHANGEd INSIDE
+num_layers: 4 # CHANGEd INSIDE 
 n_epoch: 60 # 150 # 60 # 150  # Number of training epochs
 hidden_dim_stage1: 40  # CHANGEd INSIDE 
 hidden_dim_stage2: 40  # CHANGEd INSIDE 

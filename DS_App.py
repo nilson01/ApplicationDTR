@@ -31,7 +31,7 @@ ro.r.source("ACWL_tao.R")
 def load_and_preprocess_data(params, replication_seed, run='train'):
 
     # cutting off data points for faster testing
-    df = pd.read_csv('final_data.csv').iloc[:3000, ]  #.iloc[:params["sample_size"], ] 
+    df = pd.read_csv('final_data.csv').iloc[:2000, ]  #.iloc[:params["sample_size"], ] 
     print("df ==================> : ", df.shape, "Total data points: ",  df.shape[0]/2)
 
     # Shuffle
@@ -469,7 +469,7 @@ def evaluate_tao(S1, S2, A1, A2, Y1, Y2, params_ds, config_number):
 
 
 # def eval_DTR(V_replications, num_replications, nn_stage1_DQL, nn_stage2_DQL, nn_stage1_DS, nn_stage2_DS, df_DQL, df_DS, df_Tao, params_dql, params_ds, config_number):
-def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql, params_ds, config_number):
+def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql, params_ds, tmp, config_number):
 
     # Generate and preprocess data for evaluation
     processed_result = load_and_preprocess_data(params_ds, replication_seed=num_replications, run='test')
@@ -518,8 +518,8 @@ def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql
     #######################################
     if params_ds.get('run_DQlearning', True):
         start_time = time.time()  # Start time recording
-        df_DQL, V_rep_DQL = evaluate_method('DQL', params_dql, config_number, df_DQL, test_input_stage1, A1_tensor_test, test_input_stage2, 
-                                            A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2)
+        df_DQL, V_rep_DQL, param_W_DQL = evaluate_method('DQL', params_dql, config_number, df_DQL, test_input_stage1, A1_tensor_test, test_input_stage2, 
+                                            A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2, tmp)
         end_time = time.time()  # End time recording
         print(f"\n\nTotal time taken to run evaluate_method)W_estimator('DQL'): { end_time - start_time} seconds")
         # Append policy values for DQL
@@ -532,8 +532,8 @@ def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql
     ########################################
     if params_ds.get('run_surr_opt', True):
         start_time = time.time()  # Start time recording
-        df_DS, V_rep_DS = evaluate_method('DS', params_ds, config_number, df_DS, test_input_stage1, A1_tensor_test, test_input_stage2, 
-                                        A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2)
+        df_DS, V_rep_DS, param_W_DS = evaluate_method('DS', params_ds, config_number, df_DS, test_input_stage1, A1_tensor_test, test_input_stage2, 
+                                        A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2, tmp)
         end_time = time.time()  # End time recording
         print(f"\n\nTotal time taken to run evaluate_method)W_estimator('DS'): { end_time - start_time} seconds\n\n")
                     
@@ -542,7 +542,7 @@ def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql
         message = f'\nY1_DS+Y2_DS mean: {V_rep_DS} '
         print(message)
 
-    return V_replications, df_DQL, df_DS, df_Tao # {"df_DQL": df_DQL, "df_DS":df_DS, "df_Tao": df_Tao}
+    return V_replications, df_DQL, df_DS, df_Tao, param_W_DQL, param_W_DS # {"df_DQL": df_DQL, "df_DS":df_DS, "df_Tao": df_Tao}
 
 
 
@@ -566,13 +566,15 @@ def adaptive_contrast_tao(all_data, contrast, config_number, job_id):
     # Load the R script containing the function
     ro.r('source("ACWL_tao.R")')
 
-    # print("probs1: --------> ",probs1, probs1.shape, "\n\n\n")
 
+
+    # print("probs1: --------> ",probs1, probs1.shape, "\n\n\n")
     # print("\n\n\n", "probs2: --------> ",probs2, probs2.shape, "\n\n")     
     # print("Max values of each row: ", np.min(np.max(probs2, axis=1)) , "\n\n")
 
     # Call the R function with the numpy arrays     
     ro.globalenv['train_ACWL'](job_id, S1, S2, A1, A2, probs1, probs2, R1, R2, config_number, contrast)
+
 
 
 def simulations(V_replications, params, config_fixed, config_number):
@@ -585,8 +587,35 @@ def simulations(V_replications, params, config_fixed, config_number):
     df_Tao = pd.DataFrame(columns=columns)
 
     losses_dict = {'DQL': {}, 'DS': {}} 
+
+    config_dict = {
+        "trainingFixed": params['trainingFixed'],  
+        "training_config": {'DQL': {}, 'DS': {}}, 
+        "testing_config": {'DQL': {}, 'DS': {}}
+    }
+
+    # config_dict['trainingFixed'].append(params['trainingFixed'])
+
     epoch_num_model_lst = []
     
+
+    # Clone the fixed config for DQlearning and surr_opt to load the correct trained model 
+    if params['trainingFixed']:
+        tmp = [params['num_layers'], params['hidden_dim_stage1'], params['hidden_dim_stage2'], params['activation_function'] ]
+        # print(f"<<<<<<<<<<<<<--------------  {tmp} --------------->>>>>>>>>>>>>>>>>")
+        params['num_layers'] = config_fixed['num_layers'] 
+        params['hidden_dim_stage1'] = config_fixed['hidden_dim_stage1'] 
+        params['hidden_dim_stage2'] = config_fixed['hidden_dim_stage2'] 
+        params['activation_function'] = config_fixed['activation_function'] 
+
+    else:         
+        tmp = [config_fixed['num_layers'], config_fixed['hidden_dim_stage1'], config_fixed['hidden_dim_stage2'], config_fixed['activation_function'] ]
+        config_fixed['num_layers'] = params['num_layers']
+        config_fixed['hidden_dim_stage1'] = params['hidden_dim_stage1']
+        config_fixed['hidden_dim_stage2'] = params['hidden_dim_stage2']
+        config_fixed['activation_function'] = params['activation_function']
+
+
     # Clone the updated config for DQlearning and surr_opt
     params_DQL_u = copy.deepcopy(params)
     params_DS_u = copy.deepcopy(params)
@@ -595,12 +624,6 @@ def simulations(V_replications, params, config_fixed, config_number):
     params_DQL_u['f_model'] = 'DQlearning'
     params_DQL_u['num_networks'] = 1  
 
-    # Clone the fixed config for DQlearning and surr_opt
-    config_fixed['num_layers'] = params['num_layers']
-    config_fixed['hidden_dim_stage1'] = params['hidden_dim_stage1']
-    config_fixed['hidden_dim_stage2'] = params['hidden_dim_stage2']
-    config_fixed['activation_function'] = params['activation_function']
-
     params_DQL_f = copy.deepcopy(config_fixed)
     params_DS_f = copy.deepcopy(config_fixed)
     
@@ -608,8 +631,15 @@ def simulations(V_replications, params, config_fixed, config_number):
     params_DQL_f['f_model'] = 'DQlearning'
     params_DQL_f['num_networks'] = 1  
 
+    # config_dict_training_config_DQL = {}
+    # config_dict_training_config_DS = {}
+
+
+
     for replication in tqdm(range(params['num_replications']), desc="Replications_M1"):
         print(f"\nReplication # -------------->>>>>  {replication+1}")
+
+        # config_dict['replications'].append(replication+1)
 
         # Generate and preprocess data for training
         tuple_train, tuple_val, adapC_tao_Data = load_and_preprocess_data(params, replication_seed=replication, run='train')
@@ -633,7 +663,18 @@ def simulations(V_replications, params, config_fixed, config_number):
             params_DQL_f['input_dim_stage2'] = params['input_dim_stage2'] + 1 # Ex. TAO: 7 + 1 = 8 # (H_2, A_2)
 
             start_time = time.time()  # Start time recording
-            trn_val_loss_tpl_DQL = DQlearning(tuple_train, tuple_val, params_DQL_u, config_number)
+
+            if params['trainingFixed']:
+                trn_val_loss_tpl_DQL = DQlearning(tuple_train, tuple_val, params_DQL_f, config_number)                 
+                config_dict['training_config']['DQL'] = params_DQL_f  
+                # config_dict_training_config_DQL = params_DQL_f  
+
+            else:
+                trn_val_loss_tpl_DQL = DQlearning(tuple_train, tuple_val, params_DQL_u, config_number)                 
+                config_dict['training_config']['DQL'] = params_DQL_u 
+                # config_dict_training_config_DQL = params_DQL_u 
+
+
             end_time = time.time()  # End time recording
             print(f"Total time taken to run DQlearning: { end_time - start_time} seconds")
             # Store losses 
@@ -648,23 +689,46 @@ def simulations(V_replications, params, config_fixed, config_number):
             params_DS_f['input_dim_stage2'] = params['input_dim_stage2']  # Ex. TAO: 7  # (H_2, A_2)
 
             start_time = time.time()  # Start time recording
-            trn_val_loss_tpl_DS, epoch_num_model_DS = surr_opt(tuple_train, tuple_val, params_DS_u, config_number)
+
+            if params['trainingFixed']:
+                trn_val_loss_tpl_DS, epoch_num_model_DS = surr_opt(tuple_train, tuple_val, params_DS_f, config_number)                 
+                config_dict['training_config']['DS'] = params_DS_f  # Store config for DS
+                # config_dict_training_config_DS = params_DS_f 
+
+
+            else:
+                trn_val_loss_tpl_DS, epoch_num_model_DS = surr_opt(tuple_train, tuple_val, params_DS_u, config_number)
+                config_dict['training_config']['DS'] = params_DS_u  # Store config for DS
+                # config_dict_training_config_DS = params_DS_u 
+
+
             end_time = time.time()  # End time recording
             print(f"Total time taken to run surr_opt: { end_time - start_time} seconds")
             # Append epoch model results from surr_opt
             epoch_num_model_lst.append(epoch_num_model_DS)
             # Store losses 
-            losses_dict['DS'][replication] = trn_val_loss_tpl_DS
+            losses_dict['DS'][replication] = trn_val_loss_tpl_DS 
 
         # eval_DTR
         print("Evaluation started")
         start_time = time.time()  # Start time recording
-        V_replications, df_DQL, df_DS, df_Tao = eval_DTR(V_replications, replication, df_DQL, df_DS, df_Tao, params_DQL_f, params_DS_f, config_number)
-        # V_replications, df_DQL, df_DS, df_Tao = eval_DTR(V_replications, replication, df_DQL, df_DS, df_Tao, params_DQL_u, params_DS_u, config_number)
-        end_time = time.time()  # End time recording
+        
+        if params['trainingFixed']:            
+            V_replications, df_DQL, df_DS, df_Tao, param_W_DQL, param_W_DS = eval_DTR(V_replications, replication, df_DQL, df_DS, df_Tao, params_DQL_u, params_DS_u, tmp, config_number)
+        else:             
+            V_replications, df_DQL, df_DS, df_Tao, param_W_DQL, param_W_DS = eval_DTR(V_replications, replication, df_DQL, df_DS, df_Tao, params_DQL_f, params_DS_f, tmp, config_number)
+        
+        config_dict['testing_config']['DS'] = param_W_DS  # Store config for DS
+        # config_dict_training_config_DS = param_W_DS
+
+        config_dict['testing_config']['DQL'] = param_W_DQL  # Store config for DQL
+        # config_dict_training_config_DQL = param_W_DQL
+
+
+        end_time = time.time()  # End time recording 
         print(f"Total time taken to run eval_DTR: { end_time - start_time} seconds \n\n")
                 
-    return V_replications, df_DQL, df_DS, df_Tao, losses_dict, epoch_num_model_lst
+    return V_replications, df_DQL, df_DS, df_Tao, losses_dict, epoch_num_model_lst, config_dict
 
 
 def run_training(config, config_fixed, config_updates, V_replications, config_number, replication_seed):
@@ -672,13 +736,13 @@ def run_training(config, config_fixed, config_updates, V_replications, config_nu
     local_config = {**config, **config_updates}  # Create a local config that includes both global settings and updates
     
     # Execute the simulation function using updated settings
-    V_replications, df_DQL, df_DS, df_Tao, losses_dict, epoch_num_model_lst = simulations(V_replications, local_config, config_fixed, config_number)
+    V_replications, df_DQL, df_DS, df_Tao, losses_dict, epoch_num_model_lst, config_dict = simulations(V_replications, local_config, config_fixed, config_number)
     
     if not any(V_replications[key] for key in V_replications):
         warnings.warn("V_replications is empty. Skipping accuracy calculation.")
     else:
         VF_df_DQL, VF_df_DS, VF_df_Tao, VF_df_Beh = extract_value_functions_separate(V_replications)
-        return VF_df_DQL, VF_df_DS, VF_df_Tao, VF_df_Beh, df_DQL, df_DS, df_Tao, losses_dict, epoch_num_model_lst
+        return VF_df_DQL, VF_df_DS, VF_df_Tao, VF_df_Beh, df_DQL, df_DS, df_Tao, losses_dict, epoch_num_model_lst, config_dict
     
  
     
@@ -688,11 +752,14 @@ def run_training_with_params(params):
 
     config, config_fixed, current_config, V_replications, i, config_number = params
     return run_training(config, config_fixed, current_config, V_replications, config_number, replication_seed=i)
- 
+
+
 
 def run_grid_search(config, config_fixed, param_grid):
     # Initialize for storing results and performance metrics
     results = {}
+    all_configurations = []
+
     # Initialize separate cumulative DataFrames for DQL and DS
     all_dfs_DQL = pd.DataFrame()  # DataFrames from each DQL run
     all_dfs_DS = pd.DataFrame()   # DataFrames from each DS run
@@ -712,20 +779,24 @@ def run_grid_search(config, config_fixed, param_grid):
         future_to_params = {}
         #for current_config in param_combinations:
         for config_number, current_config in enumerate(param_combinations):
-            for i in range(grid_replications): 
+            for i in range(grid_replications):          
+                print(f"Grid replication: {i}, for config number: {config_number}")  # Debug print for replication number
                 V_replications = {
                     "V_replications_M1_pred": defaultdict(list),
                     "V_replications_M1_behavioral": [],
                 }
+
                 params = (config, config_fixed, current_config, V_replications, i, config_number)
                 future = executor.submit(run_training_with_params, params)
-                future_to_params[future] = (current_config, i)
+                future_to_params[future] = (current_config, i, config_number)
 
         for future in concurrent.futures.as_completed(future_to_params):
-            current_config, i = future_to_params[future]            
-            performance_DQL, performance_DS, performance_Tao, performance_Beh, df_DQL, df_DS, df_Tao, losses_dict, epoch_num_model_lst = future.result()
+            current_config, i, config_number = future_to_params[future]            
+            performance_DQL, performance_DS, performance_Tao, performance_Beh, df_DQL, df_DS, df_Tao, losses_dict, epoch_num_model_lst, config_dict = future.result()
             
             print(f'Configuration {current_config}, replication {i} completed successfully.')
+
+            all_configurations.append( (config_number+1, config_dict)  )   
             
             # Processing performance DataFrame for both methods
             performances_DQL = pd.DataFrame()
@@ -812,7 +883,7 @@ def run_grid_search(config, config_fixed, param_grid):
 
         
     folder = f"data/{config['job_id']}"
-    save_simulation_data(all_dfs_DQL, all_dfs_DS, all_losses_dicts, all_epoch_num_lists, results, folder)
+    save_simulation_data(all_dfs_DQL, all_dfs_DS, all_losses_dicts, all_epoch_num_lists, results, all_configurations, folder)
     load_and_process_data(config, folder)
 
         
@@ -937,17 +1008,27 @@ def main():
     config_fixed = copy.deepcopy(config)
     
     # Define parameter grid for grid search
+    # only uncomment those params which has at least 2 values
+
+    # param_grid = {}
+
     param_grid = {
-        'activation_function': ['none'], # elu, relu, sigmoid, tanh, leakyrelu, none
-        'batch_size': [25], # 50
-        'optimizer_lr': [0.07], # 0.1, 0.01, 0.07, 0.001
-        'num_layers': [4], # 2,4
-        'n_epoch':[60], # 150
-        'surrogate_num': [1, 2],
-        'option_sur': [1, 2],
-        'hidden_dim_stage1': [20],
-        'hidden_dim_stage2':[20]
+        'num_layers': [5, 12], # 2,4
+        'n_epoch':[60, 150]
     }
+
+    # param_grid = {
+    #     'activation_function': ['none', 'elu'], # elu, relu, sigmoid, tanh, leakyrelu, none
+    #     'batch_size': [200, 500, 800], # 50
+    #     'optimizer_lr': [0.07, 0.007], # 0.1, 0.01, 0.07, 0.001
+    #     'num_layers': [2, 4], # 2,4
+    #     'n_epoch':[60, 150], # 150
+    #     'surrogate_num': [1],
+    #     'option_sur': [2],
+    #     'hidden_dim_stage1': [20],
+    #     'hidden_dim_stage2':[20]
+    # }
+    
     # Perform operations whose output should go to the file
     run_grid_search(config, config_fixed, param_grid)
     

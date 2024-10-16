@@ -47,7 +47,7 @@ def extract_unique_treatment_values(df, columns_to_process, name):
     return unique_values
 
 
-def save_simulation_data(all_dfs_DQL, all_dfs_DS, all_losses_dicts, all_epoch_num_lists, results, folder):
+def save_simulation_data(all_dfs_DQL, all_dfs_DS, all_losses_dicts, all_epoch_num_lists, results, all_configurations, folder):
     # Check if the folder exists, if not, create it
     if not os.path.exists(folder):
         os.makedirs(folder)
@@ -58,6 +58,7 @@ def save_simulation_data(all_dfs_DQL, all_dfs_DS, all_losses_dicts, all_epoch_nu
     losses_path = os.path.join(folder, 'losses_dicts.pkl')
     epochs_path = os.path.join(folder, 'epoch_num_lists.pkl')
     results_path = os.path.join(folder, 'simulation_results.pkl')
+    configs_path = os.path.join(folder, 'simulation_configs.pkl')
 
     # Save each DataFrame with pickle
     with open(df_path_DQL, 'wb') as f:
@@ -72,6 +73,8 @@ def save_simulation_data(all_dfs_DQL, all_dfs_DS, all_losses_dicts, all_epoch_nu
         pickle.dump(all_epoch_num_lists, f)
     with open(results_path, 'wb') as f:
         pickle.dump(results, f)
+    with open(configs_path, 'wb') as f:
+        pickle.dump(all_configurations, f)
 
     print("Data saved successfully in the folder: %s", folder)
 
@@ -124,6 +127,7 @@ def load_and_process_data(params, folder):
     losses_path = os.path.join(folder, 'losses_dicts.pkl')
     epochs_path = os.path.join(folder, 'epoch_num_lists.pkl')
     results_path = os.path.join(folder, 'simulation_results.pkl')
+    configs_path = os.path.join(folder, 'simulation_configs.pkl')
 
     # Load DataFrames
     with open(df_path_DQL, 'rb') as f:
@@ -138,6 +142,8 @@ def load_and_process_data(params, folder):
         all_epoch_num_lists = pickle.load(f)
     with open(results_path, 'rb') as f:
         results = pickle.load(f)
+    with open(configs_path, 'rb') as f:
+        configs = pickle.load(f)
     
     # Extract and process unique values for both DQL and DS
     columns_to_process = {
@@ -164,6 +170,18 @@ def load_and_process_data(params, folder):
         plot_simulation_surLoss_losses_in_grid(selected_indices, method_losses_dicts['DS'], train_size, run_name, folder)
 
     # Print results for each configuration
+    print("\n\n")
+    # print("configs: ", json.dumps(configs, indent=4))
+
+    # Custom serializer to handle non-serializable objects like 'device'
+    def custom_serializer(obj):
+        if isinstance(obj, torch.device):  # Handle torch.device type, convert to string
+            return str(obj)
+        raise TypeError(f"Type {type(obj)} not serializable")
+
+    # Pretty-print the configs with a custom serializer
+    print("configs: ", json.dumps(configs, indent=4, default=custom_serializer))
+
     print("\n\n")
     print("<<<<<<<<<<<<<<<<<<<<<<<<<<<--------------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print("<<<<<<<<<<<<<<<<<<<<<<<<-----------------------FINAL RESULTS------------------------>>>>>>>>>>>>>>>>>>>>>>>")
@@ -1024,7 +1042,7 @@ def train_and_validate(config_number, model, optimizer, scheduler, train_inputs,
     model_dir = f"models/{params['job_id']}"
     # Check if the directory exists, if not, create it
     if not os.path.exists(model_dir):
-        os.makedirs(model_dir)     
+        os.makedirs(model_dir, exist_ok=True)     
         print(f"Directory '{model_dir}' created successfully.")
         
     # Save the best model parameters after all epochs
@@ -1224,6 +1242,99 @@ def valFn_estimate(Qhat1_H1d1, Qhat2_H2d2, Qhat1_H1A1, Qhat2_H2A2, A1_tensor, A2
     return torch.mean(Qhat1_H1d1.squeeze(1) ).item() + torch.mean(term_1 + term_2).item() 
 
 
+# def train_and_evaluate(train_data, val_data, test_data, params, config_number, resNum):
+        
+#     # Extracting elements
+    
+#     train_tensors, A1_train, A2_train, _, _ = train_data
+#     val_tensors, A1_val, A2_val = val_data
+#     test_tensors, A1_test, A2_test, P_A1_given_H1_tensor_test, P_A2_given_H2_tensor_test = test_data
+    
+    
+#     train_input_stage1, train_input_stage2, train_Y1, train_Y2, train_A1, train_A2 = train_tensors
+#     val_input_stage1, val_input_stage2, val_Y1, val_Y2, val_A1, val_A2 = val_tensors
+#     test_input_stage1, test_input_stage2, test_Y1, test_Y2, test_A1, test_A2 = test_tensors
+
+
+#     # Duplicate the params dictionary
+#     param_W = params.copy()
+
+#     # Update specific values in param_W 
+#     param_W.update({
+#         'num_networks': 1,
+#         'activation_function': 'elu', #'elu', 'relu', 'sigmoid', 'tanh', 'leakyrelu', 'none' # comment this if need to parallelize over eval
+#     })
+        
+#     if params["f_model"]!="DQlearning":
+#         param_W.update({
+#               'input_dim_stage1': params['input_dim_stage1'] + 1, # (H_1, A_1)
+#               'input_dim_stage2': params['input_dim_stage2'] + 1, # (H_2, A_2)
+#           })
+    
+#     nn_stage2, optimizer_2, scheduler_2 = initialize_model_and_optimizer(param_W, 2)
+#     train_losses_stage2, val_losses_stage2, epoch_num_model_2 = train_and_validate_W_estimator(config_number, nn_stage2, optimizer_2, scheduler_2,
+#                                                                                                train_input_stage2, train_A2, train_Y2,
+#                                                                                                val_input_stage2, val_A2, val_Y2, 
+#                                                                                                params['batch_size'], device, params['n_epoch'], 2,
+#                                                                                                params['sample_size'], params, resNum)
+    
+    
+#     model_dir = f"models/{params['job_id']}"
+#     model_filename = f"best_model_stage_Q_{2}_{params['sample_size']}_W_estimator_{params['f_model']}_config_number_{config_number}_result_{resNum}.pt"
+#     model_path = os.path.join(model_dir, model_filename)
+#     nn_stage2.load_state_dict(torch.load(model_path, map_location=params['device']))
+#     nn_stage2.eval()
+    
+#     combined_inputs2 = torch.cat((train_input_stage2, A2_train.unsqueeze(-1)), dim=1)
+#     test_tr_outputs_stage2 = nn_stage2(combined_inputs2)[0]  
+#     train_Y1_hat = test_tr_outputs_stage2.squeeze(1) + train_Y1 # pseudo outcome
+
+
+#     combined_inputs2val = torch.cat((val_input_stage2, A2_val.unsqueeze(-1)), dim=1)
+#     test_val_outputs_stage2 = nn_stage2(combined_inputs2val)[0]  
+#     val_Y1_hat = test_val_outputs_stage2.squeeze() + val_Y1 # pseudo outcome
+
+
+#     nn_stage1, optimizer_1, scheduler_1 = initialize_model_and_optimizer(param_W, 1)
+#     train_losses_stage1, val_losses_stage1, epoch_num_model_1 = train_and_validate_W_estimator(config_number, nn_stage1, optimizer_1, scheduler_1, 
+#                                                                                                train_input_stage1, train_A1, train_Y1_hat, 
+#                                                                                                val_input_stage1, val_A1, val_Y1_hat, 
+#                                                                                                params['batch_size'], device, 
+#                                                                                                params['n_epoch'], 1, 
+#                                                                                                params['sample_size'], params, resNum)    
+#     model_dir = f"models/{params['job_id']}"
+#     model_filename = f"best_model_stage_Q_{1}_{params['sample_size']}_W_estimator_{params['f_model']}_config_number_{config_number}_result_{resNum}.pt"
+#     model_path = os.path.join(model_dir, model_filename)
+#     nn_stage1.load_state_dict(torch.load(model_path, map_location=params['device']))
+#     nn_stage1.eval()
+
+
+
+#     combined_inputs2 = torch.cat((test_input_stage2, A2_test.unsqueeze(-1)), dim=1)
+#     Qhat2_H2d2 = nn_stage2(combined_inputs2)[0]  
+
+#     combined_inputs1 = torch.cat((test_input_stage1, A1_test.unsqueeze(-1)), dim=1)
+#     Qhat1_H1d1 = nn_stage1(combined_inputs1)[0]  
+
+
+#     combined_inputs2 = torch.cat((test_input_stage2, test_A2.unsqueeze(-1)), dim=1)
+#     Qhat2_H2A2 = nn_stage2(combined_inputs2)[0]  
+
+#     combined_inputs1 = torch.cat((test_input_stage1, test_A1.unsqueeze(-1)), dim=1)
+#     Qhat1_H1A1 = nn_stage1(combined_inputs1)[0] 
+    
+
+#     V_replications_M1_pred = valFn_estimate(Qhat1_H1d1, Qhat2_H2d2, 
+#                                             Qhat1_H1A1, Qhat2_H2A2, 
+#                                             test_A1, test_A2, 
+#                                             A1_test, A2_test,
+#                                             test_Y1, test_Y2, 
+#                                             P_A1_given_H1_tensor_test, P_A2_given_H2_tensor_test)
+
+#     return V_replications_M1_pred 
+
+
+
 def train_and_evaluate(train_data, val_data, test_data, params, config_number, resNum):
         
     # Extracting elements
@@ -1236,24 +1347,8 @@ def train_and_evaluate(train_data, val_data, test_data, params, config_number, r
     train_input_stage1, train_input_stage2, train_Y1, train_Y2, train_A1, train_A2 = train_tensors
     val_input_stage1, val_input_stage2, val_Y1, val_Y2, val_A1, val_A2 = val_tensors
     test_input_stage1, test_input_stage2, test_Y1, test_Y2, test_A1, test_A2 = test_tensors
-
-
-    # Duplicate the params dictionary
-    param_W = params.copy()
-
-    # Update specific values in param_W
-    param_W.update({
-        'num_networks': 1,
-        'activation_function': 'elu', #'elu', 'relu', 'sigmoid', 'tanh', 'leakyrelu', 'none' # comment this if need to parallelize over eval
-    })
-        
-    if params["f_model"]!="DQlearning":
-        param_W.update({
-              'input_dim_stage1': params['input_dim_stage1'] + 1, # (H_1, A_1)
-              'input_dim_stage2': params['input_dim_stage2'] + 1, # (H_2, A_2)
-          })
     
-    nn_stage2, optimizer_2, scheduler_2 = initialize_model_and_optimizer(param_W, 2)
+    nn_stage2, optimizer_2, scheduler_2 = initialize_model_and_optimizer(params, 2)
     train_losses_stage2, val_losses_stage2, epoch_num_model_2 = train_and_validate_W_estimator(config_number, nn_stage2, optimizer_2, scheduler_2,
                                                                                                train_input_stage2, train_A2, train_Y2,
                                                                                                val_input_stage2, val_A2, val_Y2, 
@@ -1275,9 +1370,9 @@ def train_and_evaluate(train_data, val_data, test_data, params, config_number, r
     combined_inputs2val = torch.cat((val_input_stage2, A2_val.unsqueeze(-1)), dim=1)
     test_val_outputs_stage2 = nn_stage2(combined_inputs2val)[0]  
     val_Y1_hat = test_val_outputs_stage2.squeeze() + val_Y1 # pseudo outcome
-    
 
-    nn_stage1, optimizer_1, scheduler_1 = initialize_model_and_optimizer(param_W, 1)
+
+    nn_stage1, optimizer_1, scheduler_1 = initialize_model_and_optimizer(params, 1)
     train_losses_stage1, val_losses_stage1, epoch_num_model_1 = train_and_validate_W_estimator(config_number, nn_stage1, optimizer_1, scheduler_1, 
                                                                                                train_input_stage1, train_A1, train_Y1_hat, 
                                                                                                val_input_stage1, val_A1, val_Y1_hat, 
@@ -1314,6 +1409,8 @@ def train_and_evaluate(train_data, val_data, test_data, params, config_number, r
                                             P_A1_given_H1_tensor_test, P_A2_given_H2_tensor_test)
 
     return V_replications_M1_pred 
+
+
 
 def split_data(train_tens, A1, A2, P_A1_given_H1_tensor, P_A2_given_H2_tensor, params):
 
@@ -1367,8 +1464,8 @@ def calculate_policy_values_W_estimator(train_tens, params, A1, A2, P_A1_given_H
 
 
 
-def evaluate_method(method_name, params, config_number, df, test_input_stage1, A1_tensor_test, test_input_stage2, A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2):
-    # Initialize and load models for the method
+def evaluate_method(method_name, params, config_number, df, test_input_stage1, A1_tensor_test, test_input_stage2, A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2, tmp):
+    # Initialize and load models for the method 
     nn_stage1 = initialize_and_load_model(1, params['sample_size'], params, config_number)
     nn_stage2 = initialize_and_load_model(2, params['sample_size'], params, config_number)
 
@@ -1396,8 +1493,40 @@ def evaluate_method(method_name, params, config_number, df, test_input_stage1, A
     df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
 
     # Calculate policy values using the DR estimator
-    V_replications_M1_pred = calculate_policy_values_W_estimator(train_tensors, params, A1, A2, P_A1_g_H1, P_A2_g_H2, config_number)
+
+
+    # Duplicate the params dictionary
+    param_W = params.copy()
+
+    # Update specific values in param_W  if testing is fixed 
+    param_W.update({
+        'num_networks': 1,
+        'num_layers':  tmp[0], #initial_config['num_layers'],
+        'hidden_dim_stage1': tmp[1], #initial_config['hidden_dim_stage1'],
+        'hidden_dim_stage2': tmp[2], #initial_config['hidden_dim_stage2']
+        'activation_function': tmp[3], #initial_config['activation_function'], #'elu', 'relu', 'sigmoid', 'tanh', 'leakyrelu', 'none' 
+    })
+    # print(f"<<<<<<<<<<<<<--------------  {tmp} --------------->>>>>>>>>>>>>>>>>")
+    # param_W.update({
+    #         'num_layers':  tmp[0], #initial_config['num_layers'],
+    #         'hidden_dim_stage1': tmp[1], #initial_config['hidden_dim_stage1'],
+    #         'hidden_dim_stage2': tmp[2], #initial_config['hidden_dim_stage2']
+    #         'activation_function': tmp[3], #initial_config['activation_function'], #'elu', 'relu', 'sigmoid', 'tanh', 'leakyrelu', 'none' 
+    #     })
+
+        
+    if params["f_model"]!="DQlearning":
+        param_W.update({
+              'input_dim_stage1': params['input_dim_stage1'] + 1, # (H_1, A_1)
+              'input_dim_stage2': params['input_dim_stage2'] + 1, # (H_2, A_2)
+          })
+        
+    V_replications_M1_pred = calculate_policy_values_W_estimator(train_tensors, param_W, A1, A2, P_A1_g_H1, P_A2_g_H2, config_number)
+
+
+    # V_replications_M1_pred = calculate_policy_values_W_estimator(train_tensors, params, A1, A2, P_A1_g_H1, P_A2_g_H2, config_number)
+
 
     # print(f"{method_name} estimator: ")
 
-    return df, V_replications_M1_pred
+    return df, V_replications_M1_pred, param_W
