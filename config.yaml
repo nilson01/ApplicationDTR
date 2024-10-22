@@ -23,10 +23,10 @@ scheduler_step_size: 30  # Step size for StepLR, defines the number of epochs be
 scheduler_gamma: 0.8  # Decay rate for learning rate under StepLR
 
 activation_function: none # elu, relu, sigmoid, tanh, leakyrelu, none # # CHANGEd INSIDE
-batch_size: 700 # Batch size calculated as a proportion of sample size
-optimizer_lr: 0
-num_layers: 4 # CHANGEd INSIDE 
-n_epoch: 60 # 150 # 60 # 150  # Number of training epochs
+batch_size: 200 # Batch size calculated as a proportion of sample size
+optimizer_lr: 0.007
+num_layers: 1 # 4 CHANGEd INSIDE 
+n_epoch: 150 # 150 # 60 # 150  # Number of training epochs
 hidden_dim_stage1: 40  # CHANGEd INSIDE 
 hidden_dim_stage2: 40  # CHANGEd INSIDE 
 dropout_rate: 0.4  # Dropout rate to prevent overfitting

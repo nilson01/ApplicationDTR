@@ -498,8 +498,6 @@ def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql
         start_time = time.time()  # Start time recording
         A1_Tao, A2_Tao = evaluate_tao(test_input_stage1, test_O2, A1_tensor_test, A2_tensor_test, Y1_tensor, Y2_tensor, params_ds, config_number)
         end_time = time.time()  # End time recording
-        print(f"Total time taken to run evaluate_tao: { end_time - start_time} seconds")
-
         # Append to DataFrame
         new_row_Tao = {
             'Behavioral_A1': A1_tensor_test.cpu().numpy().tolist(),
@@ -525,49 +523,65 @@ def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql
             'activation_function': tmp[3], #initial_config['activation_function'], #'elu', 'relu', 'sigmoid', 'tanh', 'leakyrelu', 'none' 
             'input_dim_stage1': params_ds['input_dim_stage1'] + 1, # (H_1, A_1)
             'input_dim_stage2': params_ds['input_dim_stage2'] + 1, # (H_2, A_2)
-        }) 
+        })
 
-        start_time = time.time()  # Start time recording
+        print()
+        print("="*60)   
+
+        start_time1 = time.time()  # Start time recording
         V_rep_Tao = calculate_policy_values_W_estimator(train_tensors, param_W, A1_Tao, A2_Tao, P_A1_g_H1, P_A2_g_H2, config_number)
-        end_time = time.time()  # End time recording
-        print(f"\n\nTotal time taken to run calculate_policy_values_W_estimator_tao: { end_time - start_time} seconds")
-                
-        # Append policy values for Tao
-        V_replications["V_replications_M1_pred"]["Tao"].append(V_rep_Tao)     
-        message = f'\nY1_tao+Y2_tao mean: {V_rep_Tao} \n'
-        print(message)
+        end_time1 = time.time()  # End time recording
+        # Append value function for Tao
+        V_replications["V_replications_M1_pred"]["Tao"].append(V_rep_Tao)  
+
+        message = f'Y1_tao+Y2_tao mean: {V_rep_Tao} \n'
+        print(message) 
+        print(f"Total time taken to run evaluate_method (Tao): { end_time - start_time + end_time1 - start_time1} seconds")
+        print("="*60)
+        print()
 
     #######################################
     # Evaluation phase using DQL's method #
     #######################################
     if params_ds.get('run_DQlearning', True):
+
+        print()
+        print("="*60)
         
         start_time = time.time()  # Start time recording
         df_DQL, V_rep_DQL, param_W_DQL = evaluate_method('DQL', params_dql, config_number, df_DQL, test_input_stage1, A1_tensor_test, test_input_stage2, 
                                             A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2, tmp)
         end_time = time.time()  # End time recording
-        print(f"\n\nTotal time taken to run evaluate_method ('DQL'): { end_time - start_time} seconds")
-        # Append policy values for DQL
+        # Append value function for DQL
         V_replications["V_replications_M1_pred"]["DQL"].append(V_rep_DQL)     
-        message = f'\nY1_DQL+Y2_DQL mean: {V_rep_DQL} '
+
+        message = f'Y1_DQL+Y2_DQL mean: {V_rep_DQL} '
         print(message)
 
+        print(f"Total time taken to run evaluate_method ('DQL'): { end_time - start_time} seconds")
+        print("="*60)
+        print()
     ########################################
     #  Evaluation phase using DS's method  #
     ########################################
     if params_ds.get('run_surr_opt', True):
 
+        print()
+        print("="*60)
+
         start_time = time.time()  # Start time recording
         df_DS, V_rep_DS, param_W_DS = evaluate_method('DS', params_ds, config_number, df_DS, test_input_stage1, A1_tensor_test, test_input_stage2, 
                                         A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2, tmp)
-        end_time = time.time()  # End time recording
-        print(f"\nTotal time taken to run evaluate_method ('DS'): { end_time - start_time} seconds\n")
-                    
-        # Append policy values for DS
+        end_time = time.time()  # End time recording        
+        
+        # Append value function for DS
         V_replications["V_replications_M1_pred"]["DS"].append(V_rep_DS)
-        message = f'\nY1_DS+Y2_DS mean: {V_rep_DS} '
-        print(message)
 
+        message = f'Y1_DS+Y2_DS mean: {V_rep_DS} '
+        print(message)         
+        print(f"Total time taken to run evaluate_method ('DS'): { end_time - start_time} seconds\n")
+        print("="*60)
+        print()
     return V_replications, df_DQL, df_DS, df_Tao, param_W_DQL, param_W_DS # {"df_DQL": df_DQL, "df_DS":df_DS, "df_Tao": df_Tao}
 
 
@@ -1037,6 +1051,9 @@ def main():
 
     param_grid = {
         'activation_function': ['elu'], # elu, relu, sigmoid, tanh, leakyrelu, none
+        'num_layers': [4], # 2,4
+        'optimizer_lr': [0.07], # 0.1, 0.01, 0.07, 0.001
+        'n_epoch':[60]
     }
 
     # param_grid = {
