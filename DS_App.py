@@ -28,20 +28,26 @@ numpy2ri.activate()
 ro.r.source("ACWL_tao.R")
 
 # Generate Data
-def load_and_preprocess_data(params, replication_seed, run='train'):
+def load_and_preprocess_data(params, replication_seed, config_seed, run='train'):
+
+    # Set seed for this configuration and replication
+    seed_value = config_seed * 100 + replication_seed  # Ensures unique seed for each config and replication
+    torch.manual_seed(seed_value) 
+    np.random.seed(seed_value)
+
 
     # cutting off data points for faster testing
-    df = pd.read_csv('final_data.csv') #.iloc[:2000, ]  #.iloc[:params["sample_size"], ] 
+    df = pd.read_csv('final_data.csv') #.iloc[:10000, ]  #.iloc[:params["sample_size"], ] 
     print("df ==================> : ", df.shape, "Total data points: ",  df.shape[0]/2)
 
     # Shuffle
-    #sample the rows creating a random order
+    # sample the rows creating a random order
     groups = [df for _, df in df.groupby('m:icustayid')]
     np.random.shuffle(groups)  # Shuffles the list of groups in place
     # Concatenate the shuffled groups back into a single DataFrame
     df = pd.concat(groups).reset_index(drop=True)
 
-    #IV fluid is the treatment
+    # IV fluid is the treatment
     O1_df = df.copy()
     cols_to_drop = ['traj', 'm:presumed_onset', 'm:charttime', 'm:icustayid','o:input_4hourly']
     O1_df = O1_df.drop(cols_to_drop, axis=1)
@@ -307,7 +313,7 @@ def load_and_preprocess_data(params, replication_seed, run='train'):
     #print(train_patient_ids, test_patient_ids, unique_indexes)
 
     if run == 'test':
-        #filter based on indices in test
+        # filter based on indices in test
         test_patient_ids = torch.tensor(test_patient_ids)
         Ci = Ci[test_patient_ids]
         O1_filtered = O1_filtered[:, test_patient_ids]
@@ -317,7 +323,7 @@ def load_and_preprocess_data(params, replication_seed, run='train'):
         A1_filtered = A1_filtered[test_patient_ids]
         A2_filtered = A2_filtered[test_patient_ids]
 
-        #calculate input stages
+        # calculate input stages
         input_stage1 = O1_filtered.t()         
         params['input_dim_stage1'] = input_stage1.shape[1] #  (H_1)  
         input_stage2 = torch.cat([O1_filtered.t(), A1_filtered.unsqueeze(1), Y1_filtered.unsqueeze(1), O2_filtered.t()], dim=1) 
@@ -325,7 +331,7 @@ def load_and_preprocess_data(params, replication_seed, run='train'):
 
         P_A1_given_H1_tensor_filtered = P_A1_given_H1_tensor_filtered[test_patient_ids]
         P_A2_given_H2_tensor_filtered = P_A2_given_H2_tensor_filtered[test_patient_ids]
-        #ensure proper data types
+        # ensure proper data types
         input_stage1 = input_stage1.float()
         input_stage2 = input_stage2.float()
         Ci = Ci.float()
@@ -472,7 +478,7 @@ def evaluate_tao(S1, S2, A1, A2, Y1, Y2, params_ds, config_number):
 def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql, params_ds, tmp, config_number):
 
     # Generate and preprocess data for evaluation
-    processed_result = load_and_preprocess_data(params_ds, replication_seed=num_replications, run='test')
+    processed_result = load_and_preprocess_data(params_ds, replication_seed=num_replications+1234, config_seed=config_number, run='test')
     test_input_stage1, test_input_stage2, test_O2, Y1_tensor, Y2_tensor, A1_tensor_test, A2_tensor_test, P_A1_g_H1, P_A2_g_H2  = processed_result
     train_tensors = [test_input_stage1, test_input_stage2, Y1_tensor, Y2_tensor, A1_tensor_test, A2_tensor_test]
 
@@ -482,6 +488,9 @@ def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql
     message = f'\nY1 beh mean: {torch.mean(Y1_tensor)}, Y2 beh mean: {torch.mean(Y2_tensor)}, Y1_beh+Y2_beh mean: {torch.mean(Y1_tensor + Y2_tensor)} '
     print(message)
 
+    param_W_DQL = None
+    param_W_DS = None
+
     #######################################
     # Evaluation phase using Tao's method #
     #######################################
@@ -490,7 +499,6 @@ def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql
         A1_Tao, A2_Tao = evaluate_tao(test_input_stage1, test_O2, A1_tensor_test, A2_tensor_test, Y1_tensor, Y2_tensor, params_ds, config_number)
         end_time = time.time()  # End time recording
         print(f"Total time taken to run evaluate_tao: { end_time - start_time} seconds")
-        
 
         # Append to DataFrame
         new_row_Tao = {
@@ -503,8 +511,24 @@ def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql
 
         # Calculate policy values fn. using the estimator of Tao's method
         # print("Tao's method estimator: ")
+
+
+        # Duplicate the params dictionary
+        param_W = params_ds.copy()
+
+        # Update specific values in param_W  if testing is fixed 
+        param_W.update({
+            'num_networks': 1,
+            'num_layers':  tmp[0], #initial_config['num_layers'],
+            'hidden_dim_stage1': tmp[1], #initial_config['hidden_dim_stage1'],
+            'hidden_dim_stage2': tmp[2], #initial_config['hidden_dim_stage2']
+            'activation_function': tmp[3], #initial_config['activation_function'], #'elu', 'relu', 'sigmoid', 'tanh', 'leakyrelu', 'none' 
+            'input_dim_stage1': params_ds['input_dim_stage1'] + 1, # (H_1, A_1)
+            'input_dim_stage2': params_ds['input_dim_stage2'] + 1, # (H_2, A_2)
+        }) 
+
         start_time = time.time()  # Start time recording
-        V_rep_Tao = calculate_policy_values_W_estimator(train_tensors, params_ds, A1_Tao, A2_Tao, P_A1_g_H1, P_A2_g_H2, config_number)
+        V_rep_Tao = calculate_policy_values_W_estimator(train_tensors, param_W, A1_Tao, A2_Tao, P_A1_g_H1, P_A2_g_H2, config_number)
         end_time = time.time()  # End time recording
         print(f"\n\nTotal time taken to run calculate_policy_values_W_estimator_tao: { end_time - start_time} seconds")
                 
@@ -517,11 +541,12 @@ def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql
     # Evaluation phase using DQL's method #
     #######################################
     if params_ds.get('run_DQlearning', True):
+        
         start_time = time.time()  # Start time recording
         df_DQL, V_rep_DQL, param_W_DQL = evaluate_method('DQL', params_dql, config_number, df_DQL, test_input_stage1, A1_tensor_test, test_input_stage2, 
                                             A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2, tmp)
         end_time = time.time()  # End time recording
-        print(f"\n\nTotal time taken to run evaluate_method)W_estimator('DQL'): { end_time - start_time} seconds")
+        print(f"\n\nTotal time taken to run evaluate_method ('DQL'): { end_time - start_time} seconds")
         # Append policy values for DQL
         V_replications["V_replications_M1_pred"]["DQL"].append(V_rep_DQL)     
         message = f'\nY1_DQL+Y2_DQL mean: {V_rep_DQL} '
@@ -531,11 +556,12 @@ def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql
     #  Evaluation phase using DS's method  #
     ########################################
     if params_ds.get('run_surr_opt', True):
+
         start_time = time.time()  # Start time recording
         df_DS, V_rep_DS, param_W_DS = evaluate_method('DS', params_ds, config_number, df_DS, test_input_stage1, A1_tensor_test, test_input_stage2, 
                                         A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2, tmp)
         end_time = time.time()  # End time recording
-        print(f"\n\nTotal time taken to run evaluate_method)W_estimator('DS'): { end_time - start_time} seconds\n\n")
+        print(f"\nTotal time taken to run evaluate_method ('DS'): { end_time - start_time} seconds\n")
                     
         # Append policy values for DS
         V_replications["V_replications_M1_pred"]["DS"].append(V_rep_DS)
@@ -642,7 +668,7 @@ def simulations(V_replications, params, config_fixed, config_number):
         # config_dict['replications'].append(replication+1)
 
         # Generate and preprocess data for training
-        tuple_train, tuple_val, adapC_tao_Data = load_and_preprocess_data(params, replication_seed=replication, run='train')
+        tuple_train, tuple_val, adapC_tao_Data = load_and_preprocess_data(params, replication_seed=replication, config_seed=config_number, run='train')
 
         # Estimate treatment regime : model --> surr_opt
         print("Training started!")
@@ -732,7 +758,6 @@ def simulations(V_replications, params, config_fixed, config_number):
 
 
 def run_training(config, config_fixed, config_updates, V_replications, config_number, replication_seed):
-    torch.manual_seed(replication_seed)
     local_config = {**config, **config_updates}  # Create a local config that includes both global settings and updates
     
     # Execute the simulation function using updated settings
@@ -1010,12 +1035,14 @@ def main():
     # Define parameter grid for grid search
     # only uncomment those params which has at least 2 values
 
-    # param_grid = {}
-
     param_grid = {
-        'num_layers': [5, 12], # 2,4
-        'n_epoch':[60, 150]
+        'activation_function': ['elu'], # elu, relu, sigmoid, tanh, leakyrelu, none
     }
+
+    # param_grid = {
+    #     'num_layers': [5, 12], # 2,4
+    #     'n_epoch':[60, 150]
+    # }
 
     # param_grid = {
     #     'activation_function': ['none', 'elu'], # elu, relu, sigmoid, tanh, leakyrelu, none

@@ -1,7 +1,7 @@
 # Network parameters configuration
-run_surr_opt: True
 run_DQlearning: True
-run_adaptive_contrast_tao: False
+run_surr_opt: True
+run_adaptive_contrast_tao: True
 trainingFixed: True # True, False
 
 
@@ -22,7 +22,7 @@ scheduler_type: reducelronplateau  # Type of learning rate scheduler, can be 're
 scheduler_step_size: 30  # Step size for StepLR, defines the number of epochs before the next LR decay
 scheduler_gamma: 0.8  # Decay rate for learning rate under StepLR
 
-activation_function: elu # elu, relu, sigmoid, tanh, leakyrelu, none # # CHANGEd INSIDE
+activation_function: none # elu, relu, sigmoid, tanh, leakyrelu, none # # CHANGEd INSIDE
 batch_size: 700 # Batch size calculated as a proportion of sample size
 optimizer_lr: 0
 num_layers: 4 # CHANGEd INSIDE 

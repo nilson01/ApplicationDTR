@@ -163,11 +163,14 @@ def load_and_process_data(params, folder):
         run_name = f"run_trainVval_{i}"
         selected_indices = [i for i in range(params['num_replications'])]  
 
-        # Pass the appropriate sub-dictionary for DQL
-        plot_simulation_Qlearning_losses_in_grid(selected_indices, method_losses_dicts['DQL'], train_size, run_name, folder)
+        # Check if method_losses_dicts['DQL'] is not empty before plotting
+        if method_losses_dicts.get('DQL'):
+            plot_simulation_Qlearning_losses_in_grid(selected_indices, method_losses_dicts['DQL'], train_size, run_name, folder)
 
-        # Pass the appropriate sub-dictionary for DS
-        plot_simulation_surLoss_losses_in_grid(selected_indices, method_losses_dicts['DS'], train_size, run_name, folder)
+        # Check if method_losses_dicts['DS'] is not empty before plotting
+        if method_losses_dicts.get('DS'):
+            plot_simulation_surLoss_losses_in_grid(selected_indices, method_losses_dicts['DS'], train_size, run_name, folder)
+
 
     # Print results for each configuration
     print("\n\n")
@@ -307,6 +310,7 @@ def initialize_nn(params, stage):
         num_hidden_layers=params['num_layers'] - 1  # num_layers is the number of hidden layers
     ).to(params['device'])
     return nn
+
 
 
 def batches(N, batch_size, seed=0):
@@ -1494,7 +1498,6 @@ def evaluate_method(method_name, params, config_number, df, test_input_stage1, A
 
     # Calculate policy values using the DR estimator
 
-
     # Duplicate the params dictionary
     param_W = params.copy()
 
@@ -1512,6 +1515,7 @@ def evaluate_method(method_name, params, config_number, df, test_input_stage1, A
               'input_dim_stage1': params['input_dim_stage1'] + 1, # (H_1, A_1)
               'input_dim_stage2': params['input_dim_stage2'] + 1, # (H_2, A_2)
           })
+        
         
     V_replications_M1_pred = calculate_policy_values_W_estimator(train_tensors, param_W, A1, A2, P_A1_g_H1, P_A2_g_H2, config_number)
 
