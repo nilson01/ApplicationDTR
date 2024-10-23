@@ -7,18 +7,28 @@ trainingFixed: True # True, False
 activation_function: none # elu, relu, sigmoid, tanh, leakyrelu, none # # CHANGEd INSIDE
 batch_size: 200 # Batch size calculated as a proportion of sample size
 optimizer_lr: 0.007
-num_layers: 1 # 4 CHANGEd INSIDE 
 n_epoch: 150 # 150 # 60 # 150  # Number of training epochs
-hidden_dim_stage1: 4  # 40, CHANGEd INSIDE 
-hidden_dim_stage2: 4  # 40, CHANGEd INSIDE 
-dropout_rate: 0.0  # 0.4 Dropout rate to prevent overfitting
+
+num_layers: 4 # 4 
+hidden_dim_stage1: 40  # 40, 
+hidden_dim_stage2: 40  # 40, 
+dropout_rate: 0.4  # 0.4 Dropout rate to prevent overfitting
+gradient_clipping: True # True, False 
+add_ll_batch_norm: True 
+
+# 159 for DQL and set param_grid = {}
+# num_layers: 1 
+# hidden_dim_stage1: 4  
+# hidden_dim_stage2: 4  
+# dropout_rate: 0.0  # 0.4 Dropout rate to prevent overfitting
+# gradient_clipping: False # True, False 
+# add_ll_batch_norm: False 
 
 f_model: "model_used"  # DQlearning, surr_opt, tao; will update this automatically later
 device: None  # Computation device, dynamically set to 'cuda' if GPU is available
 sample_size: 17368   # 3000  # Number of samples to be used -> including both stages total 36926 data points
 num_replications: 4 # 30, 100
-gradient_clipping: False # True, False
-add_ll_batch_norm: False
+
 
 training_validation_prop: 0.8  # Proportion of data for training vs validation
 num_networks: 2  # Number of parallel networks or models
@@ -38,14 +48,5 @@ surrogate_num: 1  # Indicates the surrogate model configuration number
 option_sur: 2  # Specifies the operational mode or variant of the surrogate model
 contrast: 1
 initializer: he  # He initialization method (Kaiming initialization)
-
-
-
-# 'activation_function': ['elu'], # elu, relu, sigmoid, tanh, leakyrelu, none
-# 'batch_size': [700],
-# 'optimizer_lr': [0.07], # 0.1, 0.01, 0.07, 0.001
-# # 'num_layers': [3], # 1,2,3,4,5,6,7
-# # 'n_epoch':[60, 150],
-# # "surrogate_num": 1  
 
 

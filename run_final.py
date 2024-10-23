@@ -2465,21 +2465,20 @@ def main():
     # Define parameter grid for grid search
     # these are the parameters usd for not-fixed config 
 
-    param_grid = {}
+    # param_grid = {}
 
-    # param_grid = {
-    #     'activation_function': ['elu'], # elu, relu, sigmoid, tanh, leakyrelu, none
-    #     'num_layers': [4], # 2,4
-    #     'optimizer_lr': [0.07], # 0.1, 0.01, 0.07, 0.001
-    #     'n_epoch':[60]
-    # }
+    param_grid = {
+        'activation_function': ['elu'], # elu, relu, sigmoid, tanh, leakyrelu, none
+        'num_layers': [4], # 2,4
+        'optimizer_lr': [0.07], # 0.1, 0.01, 0.07, 0.001
+        # 'n_epoch':[60]
+    }
 
 
     # param_grid = {
     #     'activation_function': ['elu'], # elu, relu, sigmoid, tanh, leakyrelu, none
     #     'batch_size': [200],#,150],#,800,1000], # 50
     #     'num_layers': [4], # 1,2,3,4,5,6,7
-    #     'n_epoch':[150], 
     # }
 
 
