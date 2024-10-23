@@ -1,14 +1,16 @@
 # Network parameters configuration
 run_DQlearning: True
 run_surr_opt: True
-run_adaptive_contrast_tao: True
+run_adaptive_contrast_tao: False
 trainingFixed: True # True, False
 
 
 f_model: "model_used"  # DQlearning, surr_opt, tao; will update this automatically later
 device: None  # Computation device, dynamically set to 'cuda' if GPU is available
 sample_size: 17368   # 3000  # Number of samples to be used -> including both stages total 36926 data points
-num_replications: 2 # 30, 100
+num_replications: 4 # 30, 100
+gradient_clipping: False # True, False
+add_ll_batch_norm: False
 
 training_validation_prop: 0.8  # Proportion of data for training vs validation
 num_networks: 2  # Number of parallel networks or models
@@ -27,8 +29,8 @@ batch_size: 200 # Batch size calculated as a proportion of sample size
 optimizer_lr: 0.007
 num_layers: 1 # 4 CHANGEd INSIDE 
 n_epoch: 150 # 150 # 60 # 150  # Number of training epochs
-hidden_dim_stage1: 40  # CHANGEd INSIDE 
-hidden_dim_stage2: 40  # CHANGEd INSIDE 
+hidden_dim_stage1: 4  # 40, CHANGEd INSIDE 
+hidden_dim_stage2: 4  # 40, CHANGEd INSIDE 
 dropout_rate: 0.4  # Dropout rate to prevent overfitting
 optimizer_type: adam  # 'adam' or 'rmsprop'
 

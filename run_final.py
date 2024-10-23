@@ -417,7 +417,9 @@ def initialize_nn(params, stage):
         num_networks=params['num_networks'],
         dropout_rate=params['dropout_rate'],
         activation_fn_name=params['activation_function'],
-        num_hidden_layers=params['num_layers'] - 1  # num_layers is the number of hidden layers
+        num_hidden_layers=params['num_layers'] - 1,  # num_layers is the number of hidden layers
+        add_ll_batch_norm=params['add_ll_batch_norm']
+
     ).to(params['device'])
     return nn
 
@@ -445,7 +447,7 @@ class Identity(nn.Module):
         return x
     
 class NNClass(nn.Module):
-    def __init__(self, input_dim, hidden_dim, output_dim, num_networks, dropout_rate, activation_fn_name, num_hidden_layers):
+    def __init__(self, input_dim, hidden_dim, output_dim, num_networks, dropout_rate, activation_fn_name, num_hidden_layers, add_ll_batch_norm):
         super(NNClass, self).__init__()
         self.networks = nn.ModuleList()
 
@@ -480,7 +482,8 @@ class NNClass(nn.Module):
                 layers.append(nn.Dropout(dropout_rate))
                 
             layers.append(nn.Linear(hidden_dim, output_dim))
-            layers.append(nn.BatchNorm1d(output_dim))
+            if add_ll_batch_norm:
+                    layers.append(nn.BatchNorm1d(output_dim))
             
             network = nn.Sequential(*layers)
             self.networks.append(network)
@@ -1053,6 +1056,11 @@ def process_batches(model1, model2, data, params, optimizer, is_train=True):
             if is_train:
                 optimizer.zero_grad()
                 loss.backward()
+                # Gradient Clipping (to prevent exploding gradients)
+                if params['gradient_clipping']:
+                    torch.nn.utils.clip_grad_norm_(model1.parameters(), max_norm=1.0)
+                    torch.nn.utils.clip_grad_norm_(model2.parameters(), max_norm=1.0)
+                
                 optimizer.step()
 
         total_loss += loss.item()
@@ -1731,7 +1739,7 @@ def load_and_preprocess_data(params, replication_seed, config_seed, run='train')
     np.random.seed(seed_value)
 
     # cutting off data points for faster testing
-    df = pd.read_csv('final_data.csv') #.iloc[:5000, ]  #.iloc[:params["sample_size"], ] 
+    df = pd.read_csv('final_data.csv').iloc[:3000, ]  #.iloc[:params["sample_size"], ] 
     print("df ==================> : ", df.shape, "Total data points: ",  df.shape[0]/2)
 
     # Shuffle
@@ -2626,14 +2634,26 @@ def main():
     config_fixed = copy.deepcopy(config)
     
     # Define parameter grid for grid search
-    # only uncomment those params which has at least 2 values
+    # these are the parameters usd for not-fixed config 
+
+    # param_grid = {}
+
+    # param_grid = {
+    #     'activation_function': ['elu'], # elu, relu, sigmoid, tanh, leakyrelu, none
+    #     'num_layers': [4], # 2,4
+    #     'optimizer_lr': [0.07], # 0.1, 0.01, 0.07, 0.001
+    #     'n_epoch':[60]
+    # }
+
 
     param_grid = {
         'activation_function': ['elu'], # elu, relu, sigmoid, tanh, leakyrelu, none
-        'num_layers': [4], # 2,4
-        'optimizer_lr': [0.07], # 0.1, 0.01, 0.07, 0.001
-        'n_epoch':[60]
+        'batch_size': [200],#,150],#,800,1000], # 50
+        'num_layers': [4], # 1,2,3,4,5,6,7
+        'n_epoch':[150], 
     }
+
+
 
     # param_grid = {
     #     'num_layers': [5, 12], # 2,4
