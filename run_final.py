@@ -508,178 +508,7 @@ class NNClass(nn.Module):
                     nn.init.constant_(layer.weight, 0.1)
                     nn.init.constant_(layer.bias, 0.0)
 
-                    
-        
-
-# class NNClass(nn.Module):
-#     def __init__(self, input_dim, hidden_dim, output_dim, num_networks, dropout_rate, activation_fn_name):
-#         super(NNClass, self).__init__()
-#         self.networks = nn.ModuleList()
-        
-#         # Map the string name to the actual activation function class
-#         if activation_fn_name.lower() == 'elu':
-#             activation_fn = nn.ELU
-#         elif activation_fn_name.lower() == 'relu':
-#             activation_fn = nn.ReLU
-#         else:
-#             raise ValueError(f"Unsupported activation function: {activation_fn_name}")
-
-#         for _ in range(num_networks):
-#             network = nn.Sequential(
-#                 nn.Linear(input_dim, hidden_dim),
-#                 activation_fn(),  # Instantiate the activation function
-#                 nn.Dropout(dropout_rate),
-#                 nn.Linear(hidden_dim, output_dim),
-#                 nn.BatchNorm1d(output_dim),
-#             )
-#             self.networks.append(network)
-            
-#     def forward(self, x):
-#         outputs = []
-#         for network in self.networks:
-#             outputs.append(network(x))
-#         return outputs
-
-#     def he_initializer(self):
-#         for network in self.networks:
-#             for layer in network:
-#                 if isinstance(layer, nn.Linear):
-#                     nn.init.kaiming_normal_(layer.weight, mode='fan_out', nonlinearity='relu')
-#                     nn.init.constant_(layer.bias, 0)  # Biases can be initialized to zero
-
-#     def reset_weights(self):
-#         for network in self.networks:
-#             for layer in network:
-#                 if isinstance(layer, nn.Linear):
-#                     nn.init.constant_(layer.weight, 0.1)
-#                     nn.init.constant_(layer.bias, 0.0)
-
-
-
-
-# class NNClass(nn.Module):
-#     def __init__(self, input_dim, hidden_dim, output_dim, num_networks, dropout_rate):
-#         super(NNClass, self).__init__()
-#         self.networks = nn.ModuleList()
-#         for _ in range(num_networks):
-#             network = nn.Sequential(
-#                 nn.Linear(input_dim, hidden_dim),
-#                 nn.ELU(alpha=0.4),
-#                 nn.Dropout(dropout_rate),
-#                 nn.Linear(hidden_dim, output_dim),
-#                 nn.BatchNorm1d(output_dim),
-#             )
-#             self.networks.append(network)
-
-#     def forward(self, x):
-#         outputs = []
-#         for network in self.networks:
-#             outputs.append(network(x))
-#         return outputs
-
-#     def he_initializer(self):
-#         for network in self.networks:
-#             for layer in network:
-#                 if isinstance(layer, nn.Linear):
-#                     nn.init.kaiming_normal_(layer.weight, mode='fan_out', nonlinearity='relu')
-#                     nn.init.constant_(layer.bias, 0)  # Biases can be initialized to zero
-
-#     def reset_weights(self):
-#         for network in self.networks:
-#             for layer in network:
-#                 if isinstance(layer, nn.Linear):
-#                     nn.init.constant_(layer.weight, 0.1)
-#                     nn.init.constant_(layer.bias, 0.0)
-
-
-
-
-# class NNClass(nn.Module):
-#     def __init__(self, input_dim, hidden_dim, output_dim, num_networks, dropout_rate):
-#         super(NNClass, self).__init__()
-#         self.networks = nn.ModuleList()
-#         for _ in range(num_networks):
-#             network = nn.Sequential(
-#                 nn.Linear(input_dim, hidden_dim),
-#                 nn.BatchNorm1d(hidden_dim),
-#                 nn.ReLU(),
-#                 nn.Dropout(dropout_rate),
-#                 nn.Linear(hidden_dim, output_dim),
-#                 nn.BatchNorm1d(output_dim),
-#             )
-#             self.networks.append(network)
-
-#     def forward(self, x):
-#         outputs = []
-#         for network in self.networks:
-#             outputs.append(network(x))
-#         return outputs
-
-#     def he_initializer(self):
-#         for network in self.networks:
-#             for layer in network:
-#                 if isinstance(layer, nn.Linear):
-#                     nn.init.kaiming_normal_(layer.weight, mode='fan_out', nonlinearity='relu')
-#                     nn.init.constant_(layer.bias, 0)  # Biases can be initialized to zero
-
-#     def reset_weights(self):
-#         for network in self.networks:
-#             for layer in network:
-#                 if isinstance(layer, nn.Linear):
-#                     nn.init.constant_(layer.weight, 0.1)
-#                     nn.init.constant_(layer.bias, 0.0)
-
-
-
-# class NNClass(nn.Module):
-#     def __init__(self, input_dim, hidden_dim, output_dim, num_networks, dropout_rate):
-#         super(NNClass, self).__init__()
-#         self.networks = nn.ModuleList()
-#         for _ in range(num_networks):
-#             network = nn.Sequential(
-#                 nn.Linear(input_dim, hidden_dim),
-#                 nn.BatchNorm1d(hidden_dim),
-#                 nn.ReLU(),
-#                 nn.Linear(hidden_dim, hidden_dim),
-#                 nn.Dropout(dropout_rate),
-#                 nn.Linear(hidden_dim, hidden_dim),
-#                 nn.ReLU(),
-#                 nn.Linear(hidden_dim, output_dim),
-#                 nn.BatchNorm1d(output_dim),
-#             )
-#             self.networks.append(network)
-
-#     def forward(self, x):
-#         outputs = []
-#         for network in self.networks:
-#             outputs.append(network(x))
-#         return outputs
-
-#     def he_initializer(self):
-#         for network in self.networks:
-#             for layer in network:
-#                 if isinstance(layer, nn.Linear):
-#                     nn.init.kaiming_normal_(layer.weight, mode='fan_out', nonlinearity='relu')
-#                     nn.init.constant_(layer.bias, 0)  # Biases can be initialized to zero
-
-#     def reset_weights(self):
-#         for network in self.networks:
-#             for layer in network:
-#                 if isinstance(layer, nn.Linear):
-#                     nn.init.constant_(layer.weight, 0.1)
-#                     nn.init.constant_(layer.bias, 0.0)
-
-
-
-
-
-
-
-
-
-
-
-
+                   
 
 
 # 2. plotting and summary utils
@@ -1739,7 +1568,7 @@ def load_and_preprocess_data(params, replication_seed, config_seed, run='train')
     np.random.seed(seed_value)
 
     # cutting off data points for faster testing
-    df = pd.read_csv('final_data.csv').iloc[:3000, ]  #.iloc[:params["sample_size"], ] 
+    df = pd.read_csv('final_data.csv') #.iloc[:3000, ]  #.iloc[:params["sample_size"], ] 
     print("df ==================> : ", df.shape, "Total data points: ",  df.shape[0]/2)
 
     # Shuffle
@@ -2636,7 +2465,7 @@ def main():
     # Define parameter grid for grid search
     # these are the parameters usd for not-fixed config 
 
-    # param_grid = {}
+    param_grid = {}
 
     # param_grid = {
     #     'activation_function': ['elu'], # elu, relu, sigmoid, tanh, leakyrelu, none
@@ -2646,12 +2475,12 @@ def main():
     # }
 
 
-    param_grid = {
-        'activation_function': ['elu'], # elu, relu, sigmoid, tanh, leakyrelu, none
-        'batch_size': [200],#,150],#,800,1000], # 50
-        'num_layers': [4], # 1,2,3,4,5,6,7
-        'n_epoch':[150], 
-    }
+    # param_grid = {
+    #     'activation_function': ['elu'], # elu, relu, sigmoid, tanh, leakyrelu, none
+    #     'batch_size': [200],#,150],#,800,1000], # 50
+    #     'num_layers': [4], # 1,2,3,4,5,6,7
+    #     'n_epoch':[150], 
+    # }
 
 
 
