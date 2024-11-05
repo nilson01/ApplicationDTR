@@ -1,0 +1,6 @@
+
+Start time: 2024-11-05 06:01:46
+Job ID:  11885902
+config['sample_size'] : %d 17368
+8 available workers for ProcessPoolExecutor.
+Grid replication: 0, for config number: 0

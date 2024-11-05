@@ -1,0 +1,1515 @@
+
+Start time: 2024-11-05 05:56:38
+Job ID:  11885901
+config['sample_size'] : %d 17368
+8 available workers for ProcessPoolExecutor.
+Grid replication: 0, for config number: 0
+
+
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Replications_M1:   0%|                                                                                                                             | 0/4 [00:00<?, ?it/s]
+Replication # -------------->>>>>  1
+df ==================> :  (3000, 51) Total data points:  1500.0
+Probs matrix Minimum of -> Max values over each rows:  0.342986139797364 
+
+Probs matrix Minimum of -> Max values over each rows:  0.5043867930320002 
+
+number of deletes 84
+P_A2_H2 max, min, avg tensor(1., device='cuda:0') tensor(0.1977, device='cuda:0') tensor(0.9716, device='cuda:0')
+P_A1_H1 max, min, avg tensor(0.9941, device='cuda:0') tensor(0.1016, device='cuda:0') tensor(0.6256, device='cuda:0')
+pi_tensor dimensions:  torch.Size([6, 1416])
+shape torch.Size([6, 708])
+dimensions of input stage 708
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+
+
+Training started!
+
+***************************************** Train -> Agent #: 0*****************************************
+
+Improved ---> ema_val_loss: -511.5220031738281, best_val_loss: inf. Saving the model...
+ total_steps   ---->   3
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [1/30], Average Training Loss: -690.3698, Average Validation Loss: -511.5220031738281
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -488.1057983398438, best_val_loss: -511.5220031738281, no_improvement_count: 0, stabilization_patience: 4
+Did not improve ---> ema_val_loss: -457.02977172851564, best_val_loss: -511.5220031738281, no_improvement_count: 1, stabilization_patience: 4
+ total_steps   ---->   6
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [2/30], Average Training Loss: -698.2472, Average Validation Loss: -408.99351501464844
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -429.04156469726564, best_val_loss: -511.5220031738281, no_improvement_count: 2, stabilization_patience: 4
+ total_steps   ---->   9
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [3/30], Average Training Loss: -853.8509, Average Validation Loss: -363.7357482910156
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -409.30344526367185, best_val_loss: -511.5220031738281, no_improvement_count: 3, stabilization_patience: 4
+Validation loss stabilized <<<<<<<<<<---------->>>>>>>>>> reinitializing model at epoch 4
+Did not improve ---> ema_val_loss: -420.3386506982422, best_val_loss: -511.5220031738281, no_improvement_count: 0, stabilization_patience: 4
+ total_steps   ---->   12
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [4/30], Average Training Loss: -485.4335, Average Validation Loss: -404.6676483154297
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -406.3547770463867, best_val_loss: -511.5220031738281, no_improvement_count: 1, stabilization_patience: 4
+ total_steps   ---->   15
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [5/30], Average Training Loss: -608.9911, Average Validation Loss: -373.7257385253906
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -395.8578776238769, best_val_loss: -511.5220031738281, no_improvement_count: 2, stabilization_patience: 4
+Did not improve ---> ema_val_loss: -385.80645916093255, best_val_loss: -511.5220031738281, no_improvement_count: 3, stabilization_patience: 4
+Validation loss stabilized <<<<<<<<<<---------->>>>>>>>>> reinitializing model at epoch 6
+ total_steps   ---->   18
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [6/30], Average Training Loss: -619.4416, Average Validation Loss: -366.859130859375
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -416.3784252212465, best_val_loss: -511.5220031738281, no_improvement_count: 0, stabilization_patience: 4
+ total_steps   ---->   21
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [7/30], Average Training Loss: -771.4637, Average Validation Loss: -487.7130126953125
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -432.8984273179584, best_val_loss: -511.5220031738281, no_improvement_count: 1, stabilization_patience: 4
+Did not improve ---> ema_val_loss: -444.3381367934693, best_val_loss: -511.5220031738281, no_improvement_count: 2, stabilization_patience: 4
+ total_steps   ---->   24
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [8/30], Average Training Loss: -738.7426, Average Validation Loss: -471.2379455566406
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -452.75066059917845, best_val_loss: -511.5220031738281, no_improvement_count: 3, stabilization_patience: 4
+Validation loss stabilized <<<<<<<<<<---------->>>>>>>>>> reinitializing model at epoch 9
+ total_steps   ---->   27
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [9/30], Average Training Loss: -585.8803, Average Validation Loss: -472.3798828125
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -451.26296852294047, best_val_loss: -511.5220031738281, no_improvement_count: 0, stabilization_patience: 4
+Did not improve ---> ema_val_loss: -446.7859486935974, best_val_loss: -511.5220031738281, no_improvement_count: 1, stabilization_patience: 4
+ total_steps   ---->   30
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [10/30], Average Training Loss: -577.0093, Average Validation Loss: -442.0656280517578
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -438.40569692243224, best_val_loss: -511.5220031738281, no_improvement_count: 2, stabilization_patience: 4
+ total_steps   ---->   33
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [11/30], Average Training Loss: -510.9375, Average Validation Loss: -418.8517761230469
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -433.96467632226506, best_val_loss: -511.5220031738281, no_improvement_count: 3, stabilization_patience: 4
+Early stopping after 12 epochs due to no further improvement.
+ total_steps   ---->   34
+ num_batches   ---->   1
+ num_val_steps   ---->   1
+
+Epoch [12/30], Average Training Loss: -750.5050, Average Validation Loss: -423.602294921875
+__________________________________________________________________________________________
+
+LOSS TABLE: 
+Epoch Avg Training Loss Avg Validation Loss
+    1       -690.369771         -511.522003
+    2       -698.247192         -408.993515
+    3       -853.850922         -363.735748
+    4       -485.433492         -404.667648
+    5       -608.991109         -373.725739
+    6       -619.441569         -366.859131
+    7       -771.463704         -487.713013
+    8       -738.742554         -471.237946
+    9         -585.8803         -472.379883
+   10       -577.009338         -442.065628
+   11        -510.93752         -418.851776
+   12       -750.505005         -423.602295
+
+Model stage 1 saved successfully at models/11885901/best_model_stage_surr_1_17368_config_number_0_ensemble_num_0.pt
+Model stage 2 saved successfully at models/11885901/best_model_stage_surr_2_17368_config_number_0_ensemble_num_0.pt
+Total time taken to run surr_opt: 1.8488757610321045 seconds
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+
+
+Evaluation started
+df ==================> :  (3000, 51) Total data points:  1500.0
+Probs matrix Minimum of -> Max values over each rows:  0.3489005106121682 
+
+Probs matrix Minimum of -> Max values over each rows:  0.5288146014711255 
+
+number of deletes 81
+P_A2_H2 max, min, avg tensor(1., device='cuda:0') tensor(0.1225, device='cuda:0') tensor(0.9878, device='cuda:0')
+P_A1_H1 max, min, avg tensor(0.9938, device='cuda:0') tensor(0.1004, device='cuda:0') tensor(0.6227, device='cuda:0')
+pi_tensor dimensions:  torch.Size([6, 1419])
+==========================================================================================
+pi_10:  0.6163265705108643 pi_11:  0.16906726360321045 pi_12:  0.2146061211824417
+pi_20:  0.3563985526561737 pi_21:  0.21380971372127533 pi_22:  0.42979171872138977
+==========================================================================================
+
+==========================================================================================
+Y1_beh mean:  tensor(79.5644, dtype=torch.float64)
+Y2_beh mean:  tensor(79.7284, dtype=torch.float64)
+Y1_beh+Y2_beh mean:  tensor(159.2928, dtype=torch.float64)
+==========================================================================================
+
+============================
+|  Direct Search's method  |
+============================
+============================================================
+
+***************************************** Test -> Agent #: 0*****************************************
+
+
+Top 20 Ensemble Predictions and Majority Votes for A1 (stacked format):
+Sample 1:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 2:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 3:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 4:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 5:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 6:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 7:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 8:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 9:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 10:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 11:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 12:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 13:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 14:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 15:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 16:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 17:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 18:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 19:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 20:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+
+Top 20 Ensemble Predictions and Majority Votes for A2 (stacked format):
+Sample 1:
+  Ensemble A2 predictions + Voted A2 action: [1, 1]
+Sample 2:
+  Ensemble A2 predictions + Voted A2 action: [1, 1]
+Sample 3:
+  Ensemble A2 predictions + Voted A2 action: [1, 1]
+Sample 4:
+  Ensemble A2 predictions + Voted A2 action: [1, 1]
+Sample 5:
+  Ensemble A2 predictions + Voted A2 action: [1, 1]
+Sample 6:
+  Ensemble A2 predictions + Voted A2 action: [1, 1]
+Sample 7:
+  Ensemble A2 predictions + Voted A2 action: [1, 1]
+Sample 8:
+  Ensemble A2 predictions + Voted A2 action: [1, 1]
+Sample 9:
+  Ensemble A2 predictions + Voted A2 action: [1, 1]
+Sample 10:
+  Ensemble A2 predictions + Voted A2 action: [1, 1]
+Sample 11:
+  Ensemble A2 predictions + Voted A2 action: [1, 1]
+Sample 12:
+  Ensemble A2 predictions + Voted A2 action: [1, 1]
+Sample 13:
+  Ensemble A2 predictions + Voted A2 action: [1, 1]
+Sample 14:
+  Ensemble A2 predictions + Voted A2 action: [1, 1]
+Sample 15:
+  Ensemble A2 predictions + Voted A2 action: [1, 1]
+Sample 16:
+  Ensemble A2 predictions + Voted A2 action: [1, 1]
+Sample 17:
+  Ensemble A2 predictions + Voted A2 action: [1, 1]
+Sample 18:
+  Ensemble A2 predictions + Voted A2 action: [1, 1]
+Sample 19:
+  Ensemble A2 predictions + Voted A2 action: [1, 1]
+Sample 20:
+  Ensemble A2 predictions + Voted A2 action: [1, 1]
+calculate_policy_values_W_estimator:  119.69060802459717 86.32378876209259
+Y1_DS+Y2_DS mean: 103.00719839334488 
+
+Total time taken to run evaluate_method ('DS'): 1.4136860370635986 seconds
+============================================================
+
+Total time taken to run eval_DTR: 2.9899282455444336 seconds 
+
+
+Replications_M1:  25%|█████████████████████████████▎                                                                                       | 1/4 [00:06<00:20,  6.98s/it]
+Replication # -------------->>>>>  2
+df ==================> :  (3000, 51) Total data points:  1500.0
+Probs matrix Minimum of -> Max values over each rows:  0.33856172597998263 
+
+Probs matrix Minimum of -> Max values over each rows:  0.5000923089039976 
+
+number of deletes 87
+P_A2_H2 max, min, avg tensor(1., device='cuda:0') tensor(0.1116, device='cuda:0') tensor(0.9781, device='cuda:0')
+P_A1_H1 max, min, avg tensor(0.9944, device='cuda:0') tensor(0.1004, device='cuda:0') tensor(0.6245, device='cuda:0')
+pi_tensor dimensions:  torch.Size([6, 1413])
+shape torch.Size([6, 706])
+dimensions of input stage 706
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+
+
+Training started!
+
+***************************************** Train -> Agent #: 0*****************************************
+
+Improved ---> ema_val_loss: -411.3986511230469, best_val_loss: inf. Saving the model...
+ total_steps   ---->   3
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [1/30], Average Training Loss: -801.7374, Average Validation Loss: -411.3986511230469
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -420.5532745361328, best_val_loss: -411.3986511230469. Saving the model...
+Improved ---> ema_val_loss: -435.302981262207, best_val_loss: -420.5532745361328. Saving the model...
+ total_steps   ---->   6
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [2/30], Average Training Loss: -793.5778, Average Validation Loss: -455.81651306152344
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -461.3058796081542, best_val_loss: -435.302981262207. Saving the model...
+ total_steps   ---->   9
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [3/30], Average Training Loss: -728.4852, Average Validation Loss: -521.9793090820312
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -482.8060773956298, best_val_loss: -461.3058796081542. Saving the model...
+Improved ---> ema_val_loss: -500.17694948944086, best_val_loss: -482.8060773956298. Saving the model...
+ total_steps   ---->   12
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [4/30], Average Training Loss: -872.5793, Average Validation Loss: -536.8410949707031
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -515.5507750429992, best_val_loss: -500.17694948944086. Saving the model...
+ total_steps   ---->   15
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [5/30], Average Training Loss: -813.8459, Average Validation Loss: -551.4230346679688
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -532.0692705574431, best_val_loss: -515.5507750429992. Saving the model...
+Improved ---> ema_val_loss: -543.002902232007, best_val_loss: -532.0692705574431. Saving the model...
+ total_steps   ---->   18
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [6/30], Average Training Loss: -843.5807, Average Validation Loss: -569.5635681152344
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -546.9012625194362, best_val_loss: -543.002902232007. Saving the model...
+ total_steps   ---->   21
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [7/30], Average Training Loss: -703.9310, Average Validation Loss: -555.9974365234375
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -548.0760253651678, best_val_loss: -546.9012625194362. Saving the model...
+Improved ---> ema_val_loss: -549.7023205388205, best_val_loss: -548.0760253651678. Saving the model...
+ total_steps   ---->   24
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [8/30], Average Training Loss: -1012.0388, Average Validation Loss: -552.1570739746094
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -551.8962569455337, best_val_loss: -549.7023205388205. Saving the model...
+ total_steps   ---->   27
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [9/30], Average Training Loss: -764.0082, Average Validation Loss: -557.0154418945312
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -554.378869119686, best_val_loss: -551.8962569455337. Saving the model...
+Improved ---> ema_val_loss: -556.7454452001864, best_val_loss: -554.378869119686. Saving the model...
+ total_steps   ---->   30
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [10/30], Average Training Loss: -1117.5927, Average Validation Loss: -561.2195434570312
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -559.5749671577086, best_val_loss: -556.7454452001864. Saving the model...
+ total_steps   ---->   33
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [11/30], Average Training Loss: -803.5124, Average Validation Loss: -566.1771850585938
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -566.0567860924273, best_val_loss: -559.5749671577086. Saving the model...
+Improved ---> ema_val_loss: -577.4427898154803, best_val_loss: -566.0567860924273. Saving the model...
+ total_steps   ---->   36
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [12/30], Average Training Loss: -941.9265, Average Validation Loss: -592.5955810546875
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -592.4470439352892, best_val_loss: -577.4427898154803. Saving the model...
+ total_steps   ---->   39
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [13/30], Average Training Loss: -997.3931, Average Validation Loss: -627.4569702148438
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -605.3141697683743, best_val_loss: -592.4470439352892. Saving the model...
+Improved ---> ema_val_loss: -621.0448089745807, best_val_loss: -605.3141697683743. Saving the model...
+ total_steps   ---->   42
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [14/30], Average Training Loss: -1191.9078, Average Validation Loss: -646.5435485839844
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -638.1101077372846, best_val_loss: -621.0448089745807. Saving the model...
+ total_steps   ---->   45
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [15/30], Average Training Loss: -1038.5500, Average Validation Loss: -677.9291381835938
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -654.0606264414898, best_val_loss: -638.1101077372846. Saving the model...
+Improved ---> ema_val_loss: -672.266541292246, best_val_loss: -654.0606264414898. Saving the model...
+ total_steps   ---->   48
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [16/30], Average Training Loss: -911.0044, Average Validation Loss: -703.0127563476562
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -684.7330388655097, best_val_loss: -672.266541292246. Saving the model...
+ total_steps   ---->   51
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [17/30], Average Training Loss: -1142.2461, Average Validation Loss: -713.821533203125
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -697.2208115320286, best_val_loss: -684.7330388655097. Saving the model...
+Improved ---> ema_val_loss: -699.218093463045, best_val_loss: -697.2208115320286. Saving the model...
+ total_steps   ---->   54
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [18/30], Average Training Loss: -1262.9580, Average Validation Loss: -715.1186828613281
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -701.0428631780377, best_val_loss: -699.218093463045. Saving the model...
+ total_steps   ---->   57
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [19/30], Average Training Loss: -1216.8017, Average Validation Loss: -705.3006591796875
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -703.378331861345, best_val_loss: -701.0428631780377. Saving the model...
+Improved ---> ema_val_loss: -708.3955024689571, best_val_loss: -703.378331861345. Saving the model...
+ total_steps   ---->   60
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [20/30], Average Training Loss: -1269.1271, Average Validation Loss: -714.4649963378906
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -711.5822533395981, best_val_loss: -708.3955024689571. Saving the model...
+ total_steps   ---->   63
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [21/30], Average Training Loss: -1123.2746, Average Validation Loss: -719.0180053710938
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -712.3739896912342, best_val_loss: -711.5822533395981. Saving the model...
+Improved ---> ema_val_loss: -712.6958626080826, best_val_loss: -712.3739896912342. Saving the model...
+ total_steps   ---->   66
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [22/30], Average Training Loss: -1311.0934, Average Validation Loss: -713.8341369628906
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -713.1213079272203, best_val_loss: -712.6958626080826. Saving the model...
+ total_steps   ---->   69
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [23/30], Average Training Loss: -1369.3492, Average Validation Loss: -714.114013671875
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -714.3695835178041, best_val_loss: -713.1213079272203. Saving the model...
+Improved ---> ema_val_loss: -716.4594164702753, best_val_loss: -714.3695835178041. Saving the model...
+ total_steps   ---->   72
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [24/30], Average Training Loss: -1389.2325, Average Validation Loss: -719.3089599609375
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -715.398703345599, best_val_loss: -716.4594164702753, no_improvement_count: 0, stabilization_patience: 4
+ total_steps   ---->   75
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [25/30], Average Training Loss: -1421.0287, Average Validation Loss: -712.9237060546875
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -713.7081389727787, best_val_loss: -716.4594164702753, no_improvement_count: 1, stabilization_patience: 4
+Did not improve ---> ema_val_loss: -711.734369155945, best_val_loss: -716.4594164702753, no_improvement_count: 2, stabilization_patience: 4
+ total_steps   ---->   78
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [26/30], Average Training Loss: -1471.2234, Average Validation Loss: -708.4461975097656
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -707.5726216415834, best_val_loss: -716.4594164702753, no_improvement_count: 3, stabilization_patience: 4
+Validation loss stabilized <<<<<<<<<<---------->>>>>>>>>> reinitializing model at epoch 27
+ total_steps   ---->   81
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [27/30], Average Training Loss: -1362.5844, Average Validation Loss: -697.8618774414062
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -647.2368733571161, best_val_loss: -716.4594164702753, no_improvement_count: 0, stabilization_patience: 4
+Did not improve ---> ema_val_loss: -612.88572101795, best_val_loss: -716.4594164702753, no_improvement_count: 1, stabilization_patience: 4
+ total_steps   ---->   84
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [28/30], Average Training Loss: -750.0884, Average Validation Loss: -519.5932464599609
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -587.5487461676431, best_val_loss: -716.4594164702753, no_improvement_count: 2, stabilization_patience: 4
+ total_steps   ---->   87
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [29/30], Average Training Loss: -722.1925, Average Validation Loss: -528.4291381835938
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -564.8113012724283, best_val_loss: -716.4594164702753, no_improvement_count: 3, stabilization_patience: 4
+Validation loss stabilized <<<<<<<<<<---------->>>>>>>>>> reinitializing model at epoch 30
+Did not improve ---> ema_val_loss: -546.1607575703872, best_val_loss: -716.4594164702753, no_improvement_count: 0, stabilization_patience: 4
+ total_steps   ---->   90
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [30/30], Average Training Loss: -534.7281, Average Validation Loss: -507.2000427246094
+__________________________________________________________________________________________
+
+LOSS TABLE: 
+Epoch Avg Training Loss Avg Validation Loss
+    1       -801.737447         -411.398651
+    2        -793.57782         -455.816513
+    3       -728.485229         -521.979309
+    4       -872.579346         -536.841095
+    5       -813.845947         -551.423035
+    6       -843.580709         -569.563568
+    7        -703.93103         -555.997437
+    8      -1012.038818         -552.157074
+    9       -764.008179         -557.015442
+   10      -1117.592651         -561.219543
+   11        -803.51237         -566.177185
+   12       -941.926514         -592.595581
+   13       -997.393087          -627.45697
+   14      -1191.907837         -646.543549
+   15      -1038.550028         -677.929138
+   16       -911.004395         -703.012756
+   17      -1142.246134         -713.821533
+   18      -1262.958049         -715.118683
+   19      -1216.801656         -705.300659
+   20      -1269.127116         -714.464996
+   21      -1123.274597         -719.018005
+   22      -1311.093384         -713.834137
+   23      -1369.349162         -714.114014
+   24      -1389.232463          -719.30896
+   25      -1421.028687         -712.923706
+   26      -1471.223389         -708.446198
+   27      -1362.584391         -697.861877
+   28        -750.08842         -519.593246
+   29       -722.192505         -528.429138
+   30       -534.728109         -507.200043
+
+Model stage 1 saved successfully at models/11885901/best_model_stage_surr_1_17368_config_number_0_ensemble_num_0.pt
+Model stage 2 saved successfully at models/11885901/best_model_stage_surr_2_17368_config_number_0_ensemble_num_0.pt
+Total time taken to run surr_opt: 1.6884937286376953 seconds
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+
+
+Evaluation started
+df ==================> :  (3000, 51) Total data points:  1500.0
+Probs matrix Minimum of -> Max values over each rows:  0.3406098520380153 
+
+Probs matrix Minimum of -> Max values over each rows:  0.5252559605495314 
+
+number of deletes 78
+P_A2_H2 max, min, avg tensor(1., device='cuda:0') tensor(0.2764, device='cuda:0') tensor(0.9895, device='cuda:0')
+P_A1_H1 max, min, avg tensor(0.9931, device='cuda:0') tensor(0.1003, device='cuda:0') tensor(0.6214, device='cuda:0')
+pi_tensor dimensions:  torch.Size([6, 1422])
+==========================================================================================
+pi_10:  0.6165876984596252 pi_11:  0.1679782271385193 pi_12:  0.2154339998960495
+pi_20:  0.35686194896698 pi_21:  0.21321284770965576 pi_22:  0.42992520332336426
+==========================================================================================
+
+==========================================================================================
+Y1_beh mean:  tensor(79.5644, dtype=torch.float64)
+Y2_beh mean:  tensor(79.7284, dtype=torch.float64)
+Y1_beh+Y2_beh mean:  tensor(159.2928, dtype=torch.float64)
+==========================================================================================
+
+============================
+|  Direct Search's method  |
+============================
+============================================================
+
+***************************************** Test -> Agent #: 0*****************************************
+
+
+Top 20 Ensemble Predictions and Majority Votes for A1 (stacked format):
+Sample 1:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 2:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 3:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 4:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 5:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 6:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 7:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 8:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 9:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 10:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 11:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 12:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 13:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 14:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 15:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 16:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 17:
+  Ensemble A1 predictions + Voted A1 action: [2, 2]
+Sample 18:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 19:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 20:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+
+Top 20 Ensemble Predictions and Majority Votes for A2 (stacked format):
+Sample 1:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 2:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 3:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 4:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 5:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 6:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 7:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 8:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 9:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 10:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 11:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 12:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 13:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 14:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 15:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 16:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 17:
+  Ensemble A2 predictions + Voted A2 action: [2, 2]
+Sample 18:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 19:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 20:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+calculate_policy_values_W_estimator:  120.99476730823517 71.58284854888916
+Y1_DS+Y2_DS mean: 96.28880792856216 
+
+Total time taken to run evaluate_method ('DS'): 0.7363729476928711 seconds
+============================================================
+
+Total time taken to run eval_DTR: 2.3176181316375732 seconds 
+
+
+Replications_M1:  50%|██████████████████████████████████████████████████████████▌                                                          | 2/4 [00:12<00:12,  6.16s/it]
+Replication # -------------->>>>>  3
+df ==================> :  (3000, 51) Total data points:  1500.0
+Probs matrix Minimum of -> Max values over each rows:  0.3377709812234615 
+
+Probs matrix Minimum of -> Max values over each rows:  0.5631183876648553 
+
+number of deletes 85
+P_A2_H2 max, min, avg tensor(1., device='cuda:0') tensor(0.1171, device='cuda:0') tensor(0.9886, device='cuda:0')
+P_A1_H1 max, min, avg tensor(0.9940, device='cuda:0') tensor(0.1010, device='cuda:0') tensor(0.6272, device='cuda:0')
+pi_tensor dimensions:  torch.Size([6, 1415])
+shape torch.Size([6, 707])
+dimensions of input stage 707
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+
+
+Training started!
+
+***************************************** Train -> Agent #: 0*****************************************
+
+Improved ---> ema_val_loss: -784.7664794921875, best_val_loss: inf. Saving the model...
+ total_steps   ---->   3
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [1/30], Average Training Loss: -554.0818, Average Validation Loss: -784.7664794921875
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -777.4500610351562, best_val_loss: -784.7664794921875, no_improvement_count: 0, stabilization_patience: 4
+Did not improve ---> ema_val_loss: -748.8758154296873, best_val_loss: -784.7664794921875, no_improvement_count: 1, stabilization_patience: 4
+ total_steps   ---->   6
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [2/30], Average Training Loss: -523.3999, Average Validation Loss: -721.2904968261719
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -719.2156342773436, best_val_loss: -784.7664794921875, no_improvement_count: 2, stabilization_patience: 4
+ total_steps   ---->   9
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [3/30], Average Training Loss: -507.0680, Average Validation Loss: -650.008544921875
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -701.7739237304686, best_val_loss: -784.7664794921875, no_improvement_count: 3, stabilization_patience: 4
+Validation loss stabilized <<<<<<<<<<---------->>>>>>>>>> reinitializing model at epoch 4
+Did not improve ---> ema_val_loss: -615.8118210742186, best_val_loss: -784.7664794921875, no_improvement_count: 0, stabilization_patience: 4
+ total_steps   ---->   12
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [4/30], Average Training Loss: -500.2308, Average Validation Loss: -538.1550903320312
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -543.1930550253905, best_val_loss: -784.7664794921875, no_improvement_count: 1, stabilization_patience: 4
+ total_steps   ---->   15
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [5/30], Average Training Loss: -534.0184, Average Validation Loss: -373.749267578125
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -490.6007330001952, best_val_loss: -784.7664794921875, no_improvement_count: 2, stabilization_patience: 4
+Did not improve ---> ema_val_loss: -453.52607035111316, best_val_loss: -784.7664794921875, no_improvement_count: 3, stabilization_patience: 4
+Validation loss stabilized <<<<<<<<<<---------->>>>>>>>>> reinitializing model at epoch 6
+ total_steps   ---->   18
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [6/30], Average Training Loss: -533.4365, Average Validation Loss: -367.45191955566406
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -427.09058200945105, best_val_loss: -784.7664794921875, no_improvement_count: 0, stabilization_patience: 4
+ total_steps   ---->   21
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [7/30], Average Training Loss: -719.4689, Average Validation Loss: -365.40777587890625
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -410.47615765075636, best_val_loss: -784.7664794921875, no_improvement_count: 1, stabilization_patience: 4
+Did not improve ---> ema_val_loss: -408.7149876016232, best_val_loss: -784.7664794921875, no_improvement_count: 2, stabilization_patience: 4
+ total_steps   ---->   24
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [8/30], Average Training Loss: -714.3797, Average Validation Loss: -388.1573791503906
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -413.51791075472994, best_val_loss: -784.7664794921875, no_improvement_count: 3, stabilization_patience: 4
+Validation loss stabilized <<<<<<<<<<---------->>>>>>>>>> reinitializing model at epoch 9
+ total_steps   ---->   27
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [9/30], Average Training Loss: -686.3585, Average Validation Loss: -424.7247314453125
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -406.281839896475, best_val_loss: -784.7664794921875, no_improvement_count: 0, stabilization_patience: 4
+Did not improve ---> ema_val_loss: -442.49430330839186, best_val_loss: -784.7664794921875, no_improvement_count: 1, stabilization_patience: 4
+ total_steps   ---->   30
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [10/30], Average Training Loss: -583.6552, Average Validation Loss: -458.19386291503906
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -463.70367222798365, best_val_loss: -784.7664794921875, no_improvement_count: 2, stabilization_patience: 4
+ total_steps   ---->   33
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [11/30], Average Training Loss: -574.7107, Average Validation Loss: -513.1921997070312
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -470.9203079863463, best_val_loss: -784.7664794921875, no_improvement_count: 3, stabilization_patience: 4
+Early stopping after 12 epochs due to no further improvement.
+ total_steps   ---->   34
+ num_batches   ---->   1
+ num_val_steps   ---->   1
+
+Epoch [12/30], Average Training Loss: -682.0352, Average Validation Loss: -487.7591247558594
+__________________________________________________________________________________________
+
+LOSS TABLE: 
+Epoch Avg Training Loss Avg Validation Loss
+    1       -554.081797         -784.766479
+    2       -523.399882         -721.290497
+    3       -507.067983         -650.008545
+    4       -500.230774          -538.15509
+    5       -534.018412         -373.749268
+    6       -533.436452          -367.45192
+    7       -719.468872         -365.407776
+    8       -714.379659         -388.157379
+    9         -686.3585         -424.724731
+   10       -583.655212         -458.193863
+   11       -574.710693           -513.1922
+   12       -682.035156         -487.759125
+
+Model stage 1 saved successfully at models/11885901/best_model_stage_surr_1_17368_config_number_0_ensemble_num_0.pt
+Model stage 2 saved successfully at models/11885901/best_model_stage_surr_2_17368_config_number_0_ensemble_num_0.pt
+Total time taken to run surr_opt: 0.5842292308807373 seconds
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+
+
+Evaluation started
+df ==================> :  (3000, 51) Total data points:  1500.0
+Probs matrix Minimum of -> Max values over each rows:  0.3428768102716214 
+
+Probs matrix Minimum of -> Max values over each rows:  0.5060867734586966 
+
+number of deletes 82
+P_A2_H2 max, min, avg tensor(1., device='cuda:0') tensor(0.1713, device='cuda:0') tensor(0.9771, device='cuda:0')
+P_A1_H1 max, min, avg tensor(0.9936, device='cuda:0') tensor(0.1000, device='cuda:0') tensor(0.6240, device='cuda:0')
+pi_tensor dimensions:  torch.Size([6, 1418])
+==========================================================================================
+pi_10:  0.6167841553688049 pi_11:  0.16796617209911346 pi_12:  0.21524976193904877
+pi_20:  0.35643741488456726 pi_21:  0.21423037350177765 pi_22:  0.4293321967124939
+==========================================================================================
+
+==========================================================================================
+Y1_beh mean:  tensor(79.5644, dtype=torch.float64)
+Y2_beh mean:  tensor(79.7284, dtype=torch.float64)
+Y1_beh+Y2_beh mean:  tensor(159.2928, dtype=torch.float64)
+==========================================================================================
+
+============================
+|  Direct Search's method  |
+============================
+============================================================
+
+***************************************** Test -> Agent #: 0*****************************************
+
+
+Top 20 Ensemble Predictions and Majority Votes for A1 (stacked format):
+Sample 1:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 2:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 3:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 4:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 5:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 6:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 7:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 8:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 9:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 10:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 11:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 12:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 13:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 14:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 15:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 16:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 17:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 18:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 19:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 20:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+
+Top 20 Ensemble Predictions and Majority Votes for A2 (stacked format):
+Sample 1:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 2:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 3:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 4:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 5:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 6:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 7:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 8:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 9:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 10:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 11:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 12:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 13:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 14:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 15:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 16:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 17:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 18:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 19:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 20:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+calculate_policy_values_W_estimator:  109.27526545524597 30.90736424922943
+Y1_DS+Y2_DS mean: 70.0913148522377 
+
+Total time taken to run evaluate_method ('DS'): 0.732067346572876 seconds
+============================================================
+
+Total time taken to run eval_DTR: 2.4448180198669434 seconds 
+
+
+Replications_M1:  75%|███████████████████████████████████████████████████████████████████████████████████████▊                             | 3/4 [00:17<00:05,  5.46s/it]
+Replication # -------------->>>>>  4
+df ==================> :  (3000, 51) Total data points:  1500.0
+Probs matrix Minimum of -> Max values over each rows:  0.3406034368367231 
+
+Probs matrix Minimum of -> Max values over each rows:  0.5016741390884406 
+
+number of deletes 76
+P_A2_H2 max, min, avg tensor(1., device='cuda:0') tensor(0.1141, device='cuda:0') tensor(0.9755, device='cuda:0')
+P_A1_H1 max, min, avg tensor(0.9937, device='cuda:0') tensor(0.1001, device='cuda:0') tensor(0.6228, device='cuda:0')
+pi_tensor dimensions:  torch.Size([6, 1424])
+shape torch.Size([6, 712])
+dimensions of input stage 712
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+
+
+Training started!
+
+***************************************** Train -> Agent #: 0*****************************************
+
+Improved ---> ema_val_loss: -411.7840881347656, best_val_loss: inf. Saving the model...
+ total_steps   ---->   3
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [1/30], Average Training Loss: -623.7021, Average Validation Loss: -411.7840881347656
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -417.7328643798828, best_val_loss: -411.7840881347656. Saving the model...
+Improved ---> ema_val_loss: -429.9288101196289, best_val_loss: -417.7328643798828. Saving the model...
+ total_steps   ---->   6
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [2/30], Average Training Loss: -935.6221, Average Validation Loss: -444.9996795654297
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -438.4942161560058, best_val_loss: -429.9288101196289. Saving the model...
+ total_steps   ---->   9
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [3/30], Average Training Loss: -975.5392, Average Validation Loss: -458.48016357421875
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -439.0213358306884, best_val_loss: -438.4942161560058. Saving the model...
+Did not improve ---> ema_val_loss: -433.4682767562865, best_val_loss: -439.0213358306884, no_improvement_count: 0, stabilization_patience: 4
+ total_steps   ---->   12
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [4/30], Average Training Loss: -806.5161, Average Validation Loss: -430.38121032714844
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -428.0041578651427, best_val_loss: -439.0213358306884, no_improvement_count: 1, stabilization_patience: 4
+ total_steps   ---->   15
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [5/30], Average Training Loss: -781.5794, Average Validation Loss: -415.2545471191406
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -423.6937155593108, best_val_loss: -439.0213358306884, no_improvement_count: 2, stabilization_patience: 4
+Did not improve ---> ema_val_loss: -421.9919363407363, best_val_loss: -439.0213358306884, no_improvement_count: 3, stabilization_patience: 4
+Validation loss stabilized <<<<<<<<<<---------->>>>>>>>>> reinitializing model at epoch 6
+ total_steps   ---->   18
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [6/30], Average Training Loss: -1056.2339, Average Validation Loss: -415.8285675048828
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -408.42823605374974, best_val_loss: -439.0213358306884, no_improvement_count: 0, stabilization_patience: 4
+ total_steps   ---->   21
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [7/30], Average Training Loss: -533.6443, Average Validation Loss: -376.77960205078125
+__________________________________________________________________________________________
+Did not improve ---> ema_val_loss: -413.878521951492, best_val_loss: -439.0213358306884, no_improvement_count: 1, stabilization_patience: 4
+Did not improve ---> ema_val_loss: -425.08031570784124, best_val_loss: -439.0213358306884, no_improvement_count: 2, stabilization_patience: 4
+ total_steps   ---->   24
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [8/30], Average Training Loss: -770.2637, Average Validation Loss: -438.90684509277344
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -440.5104141107232, best_val_loss: -439.0213358306884. Saving the model...
+ total_steps   ---->   27
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [9/30], Average Training Loss: -633.0385, Average Validation Loss: -476.51397705078125
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -448.6573783784828, best_val_loss: -440.5104141107232. Saving the model...
+Improved ---> ema_val_loss: -456.58209174482073, best_val_loss: -448.6573783784828. Saving the model...
+ total_steps   ---->   30
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [10/30], Average Training Loss: -944.5239, Average Validation Loss: -471.3700256347656
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -466.3850551637573, best_val_loss: -456.58209174482073. Saving the model...
+ total_steps   ---->   33
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [11/30], Average Training Loss: -1088.3872, Average Validation Loss: -489.2586364746094
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -475.6578137611144, best_val_loss: -466.3850551637573. Saving the model...
+Improved ---> ema_val_loss: -486.5124593788738, best_val_loss: -475.6578137611144. Saving the model...
+ total_steps   ---->   36
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [12/30], Average Training Loss: -846.9131, Average Validation Loss: -504.5671081542969
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -496.77566492458664, best_val_loss: -486.5124593788738. Saving the model...
+ total_steps   ---->   39
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [13/30], Average Training Loss: -779.9258, Average Validation Loss: -520.72314453125
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -499.8072690360778, best_val_loss: -496.77566492458664. Saving the model...
+Improved ---> ema_val_loss: -501.3302708203716, best_val_loss: -499.8072690360778. Saving the model...
+ total_steps   ---->   42
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [14/30], Average Training Loss: -1074.4589, Average Validation Loss: -505.8824768066406
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -503.61024230863507, best_val_loss: -501.3302708203716. Saving the model...
+ total_steps   ---->   45
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [15/30], Average Training Loss: -942.1880, Average Validation Loss: -508.93017578125
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -505.78384686213826, best_val_loss: -503.61024230863507. Saving the model...
+Improved ---> ema_val_loss: -509.36248674880926, best_val_loss: -505.78384686213826. Saving the model...
+ total_steps   ---->   48
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [16/30], Average Training Loss: -1051.3786, Average Validation Loss: -514.2841186523438
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -512.2603691421352, best_val_loss: -509.36248674880926. Saving the model...
+ total_steps   ---->   51
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [17/30], Average Training Loss: -989.2185, Average Validation Loss: -519.0220947265625
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -517.2541883311353, best_val_loss: -512.2603691421352. Saving the model...
+Improved ---> ema_val_loss: -522.7093466267165, best_val_loss: -517.2541883311353. Saving the model...
+ total_steps   ---->   54
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [18/30], Average Training Loss: -1084.8743, Average Validation Loss: -532.1722412109375
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -528.9155062617484, best_val_loss: -522.7093466267165. Saving the model...
+ total_steps   ---->   57
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [19/30], Average Training Loss: -1041.5235, Average Validation Loss: -543.3965454101562
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -534.9813756234582, best_val_loss: -528.9155062617484. Saving the model...
+Improved ---> ema_val_loss: -540.672863815327, best_val_loss: -534.9813756234582. Saving the model...
+ total_steps   ---->   60
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [20/30], Average Training Loss: -1141.8551, Average Validation Loss: -551.5440368652344
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -546.3844324051039, best_val_loss: -540.672863815327. Saving the model...
+ total_steps   ---->   63
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [21/30], Average Training Loss: -1073.2905, Average Validation Loss: -559.71142578125
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -550.9967027812289, best_val_loss: -546.3844324051039. Saving the model...
+Improved ---> ema_val_loss: -557.5995046910009, best_val_loss: -550.9967027812289. Saving the model...
+ total_steps   ---->   66
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [22/30], Average Training Loss: -1040.5942, Average Validation Loss: -567.3823547363281
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -563.8509582153413, best_val_loss: -557.5995046910009. Saving the model...
+ total_steps   ---->   69
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [23/30], Average Training Loss: -1230.3550, Average Validation Loss: -578.4376831054688
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -568.8861187487857, best_val_loss: -563.8509582153413. Saving the model...
+Improved ---> ema_val_loss: -574.6123546573531, best_val_loss: -568.8861187487857. Saving the model...
+ total_steps   ---->   72
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [24/30], Average Training Loss: -1151.5035, Average Validation Loss: -584.30419921875
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -579.5265425472564, best_val_loss: -574.6123546573531. Saving the model...
+ total_steps   ---->   75
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [25/30], Average Training Loss: -1209.8205, Average Validation Loss: -590.9929809570312
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -585.4032599588608, best_val_loss: -579.5265425472564. Saving the model...
+Improved ---> ema_val_loss: -592.5922551157338, best_val_loss: -585.4032599588608. Saving the model...
+ total_steps   ---->   78
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [26/30], Average Training Loss: -1017.1843, Average Validation Loss: -604.2410888671875
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -599.8097140790605, best_val_loss: -592.5922551157338. Saving the model...
+ total_steps   ---->   81
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [27/30], Average Training Loss: -1206.5098, Average Validation Loss: -616.6504516601562
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -606.4700408221393, best_val_loss: -599.8097140790605. Saving the model...
+Improved ---> ema_val_loss: -612.8209780383881, best_val_loss: -606.4700408221393. Saving the model...
+ total_steps   ---->   84
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [28/30], Average Training Loss: -1263.8177, Average Validation Loss: -624.8253173828125
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -618.7003682206217, best_val_loss: -612.8209780383881. Saving the model...
+ total_steps   ---->   87
+ num_batches   ---->   3
+ num_val_steps   ---->   1
+
+Epoch [29/30], Average Training Loss: -1283.4385, Average Validation Loss: -632.4189453125
+__________________________________________________________________________________________
+Improved ---> ema_val_loss: -624.2514149809977, best_val_loss: -618.7003682206217. Saving the model...
+Improved ---> ema_val_loss: -630.5808000570108, best_val_loss: -624.2514149809977. Saving the model...
+ total_steps   ---->   90
+ num_batches   ---->   3
+ num_val_steps   ---->   2
+
+Epoch [30/30], Average Training Loss: -1375.6024, Average Validation Loss: -641.276611328125
+__________________________________________________________________________________________
+
+LOSS TABLE: 
+Epoch Avg Training Loss Avg Validation Loss
+    1       -623.702108         -411.784088
+    2       -935.622111          -444.99968
+    3       -975.539225         -458.480164
+    4       -806.516052          -430.38121
+    5       -781.579386         -415.254547
+    6      -1056.233948         -415.828568
+    7       -533.644297         -376.779602
+    8       -770.263672         -438.906845
+    9       -633.038534         -476.513977
+   10       -944.523885         -471.370026
+   11      -1088.387227         -489.258636
+   12       -846.913086         -504.567108
+   13       -779.925842         -520.723145
+   14      -1074.458862         -505.882477
+   15       -942.188049         -508.930176
+   16       -1051.37856         -514.284119
+   17       -989.218486         -519.022095
+   18      -1084.874268         -532.172241
+   19      -1041.523529         -543.396545
+   20      -1141.855082         -551.544037
+   21      -1073.290527         -559.711426
+   22      -1040.594177         -567.382355
+   23      -1230.355021         -578.437683
+   24       -1151.50354         -584.304199
+   25      -1209.820475         -590.992981
+   26      -1017.184347         -604.241089
+   27      -1206.509806         -616.650452
+   28      -1263.817708         -624.825317
+   29      -1283.438477         -632.418945
+   30      -1375.602417         -641.276611
+
+Model stage 1 saved successfully at models/11885901/best_model_stage_surr_1_17368_config_number_0_ensemble_num_0.pt
+Model stage 2 saved successfully at models/11885901/best_model_stage_surr_2_17368_config_number_0_ensemble_num_0.pt
+Total time taken to run surr_opt: 1.603508710861206 seconds
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+
+
+Evaluation started
+df ==================> :  (3000, 51) Total data points:  1500.0
+Probs matrix Minimum of -> Max values over each rows:  0.3473322215818575 
+
+Probs matrix Minimum of -> Max values over each rows:  0.512073459563649 
+
+number of deletes 83
+P_A2_H2 max, min, avg tensor(1., device='cuda:0') tensor(0.1216, device='cuda:0') tensor(0.9746, device='cuda:0')
+P_A1_H1 max, min, avg tensor(0.9933, device='cuda:0') tensor(0.1003, device='cuda:0') tensor(0.6271, device='cuda:0')
+pi_tensor dimensions:  torch.Size([6, 1417])
+==========================================================================================
+pi_10:  0.6177748441696167 pi_11:  0.16677427291870117 pi_12:  0.21545082330703735
+pi_20:  0.35521256923675537 pi_21:  0.21515116095542908 pi_22:  0.42963626980781555
+==========================================================================================
+
+==========================================================================================
+Y1_beh mean:  tensor(79.5644, dtype=torch.float64)
+Y2_beh mean:  tensor(79.7284, dtype=torch.float64)
+Y1_beh+Y2_beh mean:  tensor(159.2928, dtype=torch.float64)
+==========================================================================================
+
+============================
+|  Direct Search's method  |
+============================
+============================================================
+
+***************************************** Test -> Agent #: 0*****************************************
+
+
+Top 20 Ensemble Predictions and Majority Votes for A1 (stacked format):
+Sample 1:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 2:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 3:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 4:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 5:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 6:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 7:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 8:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 9:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 10:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 11:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 12:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 13:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+Sample 14:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 15:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 16:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 17:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 18:
+  Ensemble A1 predictions + Voted A1 action: [1, 1]
+Sample 19:
+  Ensemble A1 predictions + Voted A1 action: [2, 2]
+Sample 20:
+  Ensemble A1 predictions + Voted A1 action: [3, 3]
+
+Top 20 Ensemble Predictions and Majority Votes for A2 (stacked format):
+Sample 1:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 2:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 3:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 4:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 5:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 6:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 7:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 8:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 9:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 10:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 11:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 12:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 13:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 14:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 15:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 16:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 17:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 18:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+Sample 19:
+  Ensemble A2 predictions + Voted A2 action: [2, 2]
+Sample 20:
+  Ensemble A2 predictions + Voted A2 action: [3, 3]
+calculate_policy_values_W_estimator:  124.62490570545197 90.3147964477539
+Y1_DS+Y2_DS mean: 107.46985107660294 
+
+Total time taken to run evaluate_method ('DS'): 0.7377889156341553 seconds
+============================================================
+
+Total time taken to run eval_DTR: 2.4276328086853027 seconds 
+
+
+Replications_M1: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 4/4 [00:22<00:00,  5.52s/it]Replications_M1: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 4/4 [00:22<00:00,  5.70s/it]
+Configuration {'activation_function': 'elu', 'num_layers': 4, 'optimizer_lr': 0.07}, replication 0 completed successfully.
+Performances for configuration: %s {"activation_function": "elu", "num_layers": 4, "optimizer_lr": 0.07}
+performance_DQL_mean: %s nan
+performance_DS_mean: %s 94.21429306268692
+performance_Tao_mean: %s nan
+
+
+
+====================================================================================================
+|                              Value Functions Across All Simulations                              |
+====================================================================================================
+| Behavioral Value Functions across all simulations:                                               |
+| Configuration 1: [158.879638671875, 158.9205322265625, 158.72915649414062, 159.5822296142578]    |
+|                                                                                                  |
+| DQL Value Functions across all simulations:                                                      |
+| Configuration 1: [None, None, None, None]                                                        |
+|                                                                                                  |
+| DS Value Functions across all simulations:                                                       |
+| Configuration 1: [103.00719839334488, 96.28880792856216, 70.0913148522377, 107.46985107660294]   |
+|                                                                                                  |
+| Tao Value Functions across all simulations:                                                      |
+| Configuration 1: [None, None, None, None]                                                        |
+====================================================================================================
+Data saved successfully in the folder: %s data/11885901
+
+Unique values for DQL:
+Predicted: {'Predicted_A1': set(), 'Predicted_A2': set()}
+
+
+Unique values for DS:
+Predicted: {'Predicted_A1': {1, 2, 3}, 'Predicted_A2': {1, 2, 3}}
+
+unique_values_DQL:  {'Predicted': {'Predicted_A1': set(), 'Predicted_A2': set()}}
+unique_values_DS:  {'Predicted': {'Predicted_A1': {1, 2, 3}, 'Predicted_A2': {1, 2, 3}}}
+TrainVval Plot for Direct search saved as: data/11885901/run_trainVval_0_directSearch.png
+
+
+
+configs:  [
+    [
+        1,
+        {
+            "trainingFixed": true,
+            "training_config": {
+                "DQL": {},
+                "DS": {
+                    "run_DQlearning": false,
+                    "run_surr_opt": true,
+                    "run_adaptive_contrast_tao": false,
+                    "trainingFixed": true,
+                    "batch_size": 200,
+                    "optimizer_lr": 0.007,
+                    "n_epoch": 30,
+                    "eval_freq": 2,
+                    "stabilization_patience": 4,
+                    "ema_alpha": 0.3,
+                    "reinitializations_allowed": 3,
+                    "early_stopping": true,
+                    "phi_ensemble": false,
+                    "ensemble_count": 1,
+                    "activation_function": "relu",
+                    "num_layers": 4,
+                    "hidden_dim_stage1": 40,
+                    "hidden_dim_stage2": 40,
+                    "dropout_rate": 0.4,
+                    "gradient_clipping": true,
+                    "add_ll_batch_norm": true,
+                    "f_model": "surr_opt",
+                    "device": "cuda",
+                    "sample_size": 17368,
+                    "num_replications": 4,
+                    "training_validation_prop": 0.8,
+                    "num_networks": 2,
+                    "output_dim_stage1": 1,
+                    "output_dim_stage2": 1,
+                    "optimizer_weight_decay": 0.001,
+                    "use_scheduler": true,
+                    "scheduler_type": "reducelronplateau",
+                    "scheduler_step_size": 30,
+                    "scheduler_gamma": 0.8,
+                    "optimizer_type": "adam",
+                    "surrogate_num": 1,
+                    "option_sur": 2,
+                    "contrast": 1,
+                    "initializer": "he",
+                    "job_id": "11885901",
+                    "input_dim_stage1": 45,
+                    "input_dim_stage2": 89
+                }
+            },
+            "testing_config": {
+                "DQL": null,
+                "DS": {
+                    "run_DQlearning": false,
+                    "run_surr_opt": true,
+                    "run_adaptive_contrast_tao": false,
+                    "trainingFixed": true,
+                    "batch_size": 200,
+                    "optimizer_lr": 0.07,
+                    "n_epoch": 30,
+                    "eval_freq": 2,
+                    "stabilization_patience": 4,
+                    "ema_alpha": 0.3,
+                    "reinitializations_allowed": 3,
+                    "early_stopping": true,
+                    "phi_ensemble": false,
+                    "ensemble_count": 1,
+                    "activation_function": "elu",
+                    "num_layers": 4,
+                    "hidden_dim_stage1": 40,
+                    "hidden_dim_stage2": 40,
+                    "dropout_rate": 0.4,
+                    "gradient_clipping": true,
+                    "add_ll_batch_norm": true,
+                    "f_model": "surr_opt",
+                    "device": "cuda",
+                    "sample_size": 17368,
+                    "num_replications": 4,
+                    "training_validation_prop": 0.8,
+                    "num_networks": 1,
+                    "output_dim_stage1": 1,
+                    "output_dim_stage2": 1,
+                    "optimizer_weight_decay": 0.001,
+                    "use_scheduler": true,
+                    "scheduler_type": "reducelronplateau",
+                    "scheduler_step_size": 30,
+                    "scheduler_gamma": 0.8,
+                    "optimizer_type": "adam",
+                    "surrogate_num": 1,
+                    "option_sur": 2,
+                    "contrast": 1,
+                    "initializer": "he",
+                    "job_id": "11885901",
+                    "input_dim_stage1": 46,
+                    "input_dim_stage2": 90
+                }
+            }
+        }
+    ]
+]
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<--------------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<<<<-----------------------FINAL RESULTS------------------------>>>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<<<<<<<--------------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>
+Configuration: %s
+Average Performance:
+ %s
+ {"activation_function": "elu", "num_layers": 4, "optimizer_lr": 0.07} {
+    "Behavioral": {
+        "Method's Value fn.": 159.02789306640625,
+        "Method's Value fn. SD": 0.37861073380829985
+    },
+    "DQL": {
+        "Method's Value fn.": NaN,
+        "Method's Value fn. SD": NaN
+    },
+    "Tao": {
+        "Method's Value fn.": NaN,
+        "Method's Value fn. SD": NaN
+    },
+    "DS": {
+        "Method's Value fn.": 94.21429306268692,
+        "Method's Value fn. SD": 16.725695721302113
+    }
+}
+End time: 2024-11-05 05:57:40
+Total time taken: 61.30 seconds

@@ -1,0 +1,52 @@
+
+Start time: 2024-11-05 05:40:18
+Job ID:  11885896
+config['sample_size'] : %d 17368
+8 available workers for ProcessPoolExecutor.
+Grid replication: 0, for config number: 0
+
+
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Replications_M1:   0%|                                                                                                                             | 0/4 [00:00<?, ?it/s]
+Replication # -------------->>>>>  1
+df ==================> :  (3000, 51) Total data points:  1500.0
+Probs matrix Minimum of -> Max values over each rows:  0.342986139797364 
+
+Probs matrix Minimum of -> Max values over each rows:  0.5043867930320002 
+
+number of deletes 84
+P_A2_H2 max, min, avg tensor(1.) tensor(0.1977) tensor(0.9716)
+P_A1_H1 max, min, avg tensor(0.9941) tensor(0.1016) tensor(0.6256)
+pi_tensor dimensions:  torch.Size([6, 1416])
+Replications_M1:   0%|                                                                                                                             | 0/4 [00:02<?, ?it/s]
+concurrent.futures.process._RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/scratch/user/nchapagain/.conda/envs/in-context-learning/lib/python3.8/concurrent/futures/process.py", line 239, in _process_worker
+    r = call_item.fn(*call_item.args, **call_item.kwargs)
+  File "/scratch/user/nchapagain/Research/ApplicationDTR/run_final.py", line 2850, in run_training_with_params
+    return run_training(config, config_fixed, current_config, V_replications, config_number, replication_seed=i)
+  File "/scratch/user/nchapagain/Research/ApplicationDTR/run_final.py", line 2835, in run_training
+    V_replications, df_DQL, df_DS, df_Tao, losses_dict, epoch_num_model_lst, config_dict = simulations(V_replications, local_config, config_fixed, config_number)
+  File "/scratch/user/nchapagain/Research/ApplicationDTR/run_final.py", line 2717, in simulations
+    tuple_train, tuple_val, adapC_tao_Data = load_and_preprocess_data(params, replication_seed=replication, config_seed=config_number, run='train')
+  File "/scratch/user/nchapagain/Research/ApplicationDTR/run_final.py", line 1992, in load_and_preprocess_data
+    O2_filtered = O2_filtered[:, train_patient_ids].to(device)
+RuntimeError: indices should be either on cpu or on the same device as the indexed tensor (cpu)
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "run_final.py", line 3103, in <module>
+    main()
+  File "run_final.py", line 3075, in main
+    run_grid_search(config, config_fixed, param_grid)
+  File "run_final.py", line 2898, in run_grid_search
+    performance_DQL, performance_DS, performance_Tao, performance_Beh, df_DQL, df_DS, df_Tao, losses_dict, epoch_num_model_lst, config_dict = future.result()
+  File "/scratch/user/nchapagain/.conda/envs/in-context-learning/lib/python3.8/concurrent/futures/_base.py", line 437, in result
+    return self.__get_result()
+  File "/scratch/user/nchapagain/.conda/envs/in-context-learning/lib/python3.8/concurrent/futures/_base.py", line 389, in __get_result
+    raise self._exception
+RuntimeError: indices should be either on cpu or on the same device as the indexed tensor (cpu)

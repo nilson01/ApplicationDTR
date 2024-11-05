@@ -21,6 +21,7 @@ from concurrent.futures import ProcessPoolExecutor
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import OneHotEncoder
@@ -897,6 +898,36 @@ def process_batches(model1, model2, data, params, optimizer, option_sur, is_trai
     return avg_loss
 
 
+def evaluate_model(nn_stage1, nn_stage2, val_loader, params):
+    device = params['device']
+    nn_stage1.eval()
+    nn_stage2.eval()
+    val_loss = 0.0
+    num_batches = 0
+
+    with torch.no_grad():
+        for val_batch in val_loader:
+            val_batch = {k: v.to(device) for k, v in val_batch.items()}
+
+            val_outputs_stage1 = nn_stage1(val_batch['input1'])
+            val_outputs_stage2 = nn_stage2(val_batch['input2'])
+
+            val_outputs_stage1 = torch.stack(val_outputs_stage1, dim=1).squeeze()
+            val_outputs_stage2 = torch.stack(val_outputs_stage2, dim=1).squeeze()
+
+            v_loss = main_loss_gamma(
+                val_outputs_stage1, val_outputs_stage2, val_batch['A1'], val_batch['A2'],
+                val_batch['Ci'], option=params['option_sur'], surrogate_num=params['surrogate_num']
+            )
+
+            val_loss += v_loss.item()
+            num_batches += 1
+
+    nn_stage1.train()
+    nn_stage2.train()
+    return val_loss / num_batches
+
+
 def initialize_and_prepare_model(stage, params):
     model = initialize_nn(params, stage).to(params['device'])
     
@@ -980,9 +1011,9 @@ def process_batches_DQL(model, inputs, actions, targets, params, optimizer, is_t
         with torch.set_grad_enabled(is_train):
                         
             batch_idx = batch_idx.to(device)
-            inputs_batch = torch.index_select(inputs, 0, batch_idx).to(device)
-            actions_batch = torch.index_select(actions, 0, batch_idx).to(device)
-            targets_batch = torch.index_select(targets, 0, batch_idx).to(device)
+            inputs_batch = torch.index_select(inputs.to(device), 0, batch_idx).to(device)
+            actions_batch = torch.index_select(actions.to(device), 0, batch_idx).to(device)
+            targets_batch = torch.index_select(targets.to(device), 0, batch_idx).to(device)
             combined_inputs = torch.cat((inputs_batch, actions_batch.unsqueeze(-1)), dim=1)
             # print("combined_inputs shape ================================*****************: ", combined_inputs.shape)
             outputs = model(combined_inputs)
@@ -1506,6 +1537,8 @@ def evaluate_method_DS(method_name, params, config_number, df, test_input_stage1
     # Initialize lists to store the predictions for A1 and A2 across the ensemble
     A1_ensemble = []
     A2_ensemble = []
+    
+
 
     # Loop through each ensemble member
     for ensemble_num in range(params['ensemble_count']):
@@ -1513,20 +1546,20 @@ def evaluate_method_DS(method_name, params, config_number, df, test_input_stage1
         print(f"***************************************** Test -> Agent #: {ensemble_num}*****************************************")
         print()
         # Initialize and load models for the current ensemble member
-        nn_stage1 = initialize_and_load_model(1, params['sample_size'], params, config_number, ensemble_num=ensemble_num)
-        nn_stage2 = initialize_and_load_model(2, params['sample_size'], params, config_number, ensemble_num=ensemble_num)
+        nn_stage1 = initialize_and_load_model(1, params['sample_size'], params, config_number, ensemble_num=ensemble_num).to(params['device'])
+        nn_stage2 = initialize_and_load_model(2, params['sample_size'], params, config_number, ensemble_num=ensemble_num).to(params['device'])
         
         # Calculate test outputs for stage 1
         A1 = compute_test_outputs(nn=nn_stage1, 
-                                test_input=test_input_stage1, 
-                                A_tensor=A1_tensor_test, 
+                                test_input=test_input_stage1.to(params['device']), 
+                                A_tensor=A1_tensor_test.to(params['device']), 
                                 params=params, 
                                 is_stage1=True)
         
         # Calculate test outputs for stage 2
         A2 = compute_test_outputs(nn=nn_stage2, 
-                                test_input=test_input_stage2, 
-                                A_tensor=A2_tensor_test, 
+                                test_input=test_input_stage2.to(params['device']), 
+                                A_tensor=A2_tensor_test.to(params['device']), 
                                 params=params, 
                                 is_stage1=False)
         
@@ -1841,56 +1874,65 @@ def load_and_preprocess_data(params, replication_seed, config_seed, run='train')
     print("number of deletes", len(combined_indices_tensor))
 
 
-    #then I have to go through every variable and delete those indices from them
-    P_A2_given_H2_numpy = P_A2_given_H2_tensor.numpy()
+    
+    # Convert to numpy, delete specified indices, and then create tensors on the correct device
+    P_A2_given_H2_numpy = P_A2_given_H2_tensor.cpu().numpy()  # Ensure it's on CPU for NumPy operations
     P_A2_given_H2_numpy = np.delete(P_A2_given_H2_numpy, combined_indices_tensor, axis=0)
-    P_A2_given_H2_tensor_filtered = torch.tensor(P_A2_given_H2_numpy)
+    P_A2_given_H2_tensor_filtered = torch.tensor(P_A2_given_H2_numpy, device=device)  # Place on the correct device
 
-
+    # Print statistics to confirm correct values
     print("P_A2_H2 max, min, avg", P_A2_given_H2_tensor_filtered.max(), P_A2_given_H2_tensor_filtered.min(), torch.mean(P_A2_given_H2_tensor_filtered))
+
 
     # encoded_values1 = np.delete(encoded_values1, combined_indices_tensor, axis=0)
     # encoded_values2 = np.delete(encoded_values2, combined_indices_tensor, axis=0)
 
-    P_A1_given_H1_numpy = P_A1_given_H1_tensor.numpy()
+    # Convert to numpy, delete specified indices, and then create tensors on the correct device
+    P_A1_given_H1_numpy = P_A1_given_H1_tensor.cpu().numpy()  # Ensure it's on CPU for NumPy operations
     P_A1_given_H1_numpy = np.delete(P_A1_given_H1_numpy, combined_indices_tensor, axis=0)
-    P_A1_given_H1_tensor_filtered = torch.tensor(P_A1_given_H1_numpy)
+    P_A1_given_H1_tensor_filtered = torch.tensor(P_A1_given_H1_numpy, device=device)  # Place on the correct device
     print("P_A1_H1 max, min, avg", P_A1_given_H1_tensor_filtered.max(), P_A1_given_H1_tensor_filtered.min(), torch.mean(P_A1_given_H1_tensor_filtered))
-  
-    pi_tensor_stack_np = pi_tensor_stack.numpy()
+
+    # Similarly for pi_tensor_stack
+    pi_tensor_stack_np = pi_tensor_stack.cpu().numpy()  # Ensure on CPU
     pi_tensor_stack_np = np.delete(pi_tensor_stack_np, combined_indices_tensor, axis=1)
-    pi_tensor_filtered = torch.tensor(pi_tensor_stack_np)
+    pi_tensor_stack_filtered = torch.tensor(pi_tensor_stack_np, device=device)  # Move to the correct device
+
+
+    
+    # Convert pi_tensor_stack_np to a tensor and move to device
+    pi_tensor_filtered = torch.tensor(pi_tensor_stack_np, device=device)
     print("pi_tensor dimensions: ", pi_tensor_filtered.shape)
 
+    # Convert other NumPy arrays to tensors and move them to the device
     O1_numpy = np.delete(O1.numpy(), combined_indices_tensor, axis=1)
-    O1_filtered = torch.tensor(O1_numpy)
+    O1_filtered = torch.tensor(O1_numpy, device=device)
 
     O2_numpy = np.delete(O2.numpy(), combined_indices_tensor, axis=1)
-    O2_filtered = torch.tensor(O2_numpy)
+    O2_filtered = torch.tensor(O2_numpy, device=device)
 
     A1_numpy = np.delete(A1.numpy(), combined_indices_tensor, axis=0)
-    A1_filtered = torch.tensor(A1_numpy)
+    A1_filtered = torch.tensor(A1_numpy, device=device)
 
     A2_numpy = np.delete(A2.numpy(), combined_indices_tensor, axis=0)
-    A2_filtered = torch.tensor(A2_numpy)
+    A2_filtered = torch.tensor(A2_numpy, device=device)
 
     Y1_numpy = np.delete(Y1.numpy(), combined_indices_tensor, axis=0)
-    Y1_filtered = torch.tensor(Y1_numpy)
+    Y1_filtered = torch.tensor(Y1_numpy, device=device)
 
     Y2_numpy = np.delete(Y2.numpy(), combined_indices_tensor, axis=0)
-    Y2_filtered = torch.tensor(Y2_numpy)
+    Y2_filtered = torch.tensor(Y2_numpy, device=device)
 
+    # Calculate Ci tensor and move to the device
+    Ci = ((Y1_filtered + Y2_filtered) / 
+          (P_A1_given_H1_tensor_filtered.to(device) * P_A2_given_H2_tensor_filtered.to(device))).to(device)
 
+    # Prepare input tensors and ensure they are on the device
+    input_stage1 = O1_filtered.t().to(device)
+    input_stage2 = torch.cat([O1_filtered.t(), A1_filtered.unsqueeze(1), Y1_filtered.unsqueeze(1), O2_filtered.t()], dim=1).to(device)
 
-    # Calculate Ci tensor
-    Ci = (Y1_filtered + Y2_filtered) / (P_A1_given_H1_tensor_filtered * P_A2_given_H2_tensor_filtered)
-    # # Input preparation
-    input_stage1 = O1_filtered.t()
-    input_stage2 = torch.cat([O1_filtered.t(), A1_filtered.unsqueeze(1), Y1_filtered.unsqueeze(1), O2_filtered.t()], dim=1) 
-
-    # here I just need an updated set of indices (after clipping)
-    # not necessary to sort by patient id since stages are split, also some tensors dont have ids (P_A1_H1)
-    numpy_array = O1_filtered.numpy()
+    # Split unique indices into train and test sets
+    numpy_array = O1_filtered.cpu().numpy()  # Convert to CPU if necessary for Pandas
     df = pd.DataFrame(numpy_array)
     column_headings = df.columns
     unique_indexes = pd.unique(column_headings)
@@ -1899,145 +1941,501 @@ def load_and_preprocess_data(params, replication_seed, config_seed, run='train')
     #splitting the indices into test and train (not random)
     train_patient_ids, test_patient_ids = train_test_split(unique_indexes, test_size=0.5, shuffle = False)
     #print(train_patient_ids, test_patient_ids, unique_indexes)
-
+    
+    
     if run == 'test':
-        # filter based on indices in test
-        test_patient_ids = torch.tensor(test_patient_ids)
-        Ci = Ci[test_patient_ids]
-        O1_filtered = O1_filtered[:, test_patient_ids]
-        O2_filtered = O2_filtered[:, test_patient_ids]
-        Y1_filtered = Y1_filtered[test_patient_ids]
-        Y2_filtered = Y2_filtered[test_patient_ids]
-        A1_filtered = A1_filtered[test_patient_ids]
-        A2_filtered = A2_filtered[test_patient_ids]
+        # Move test_patient_ids to device
+        test_patient_ids = torch.tensor(test_patient_ids).to(device)
 
-        # calculate input stages
-        input_stage1 = O1_filtered.t()         
-        params['input_dim_stage1'] = input_stage1.shape[1] #  (H_1)  
-        input_stage2 = torch.cat([O1_filtered.t(), A1_filtered.unsqueeze(1), Y1_filtered.unsqueeze(1), O2_filtered.t()], dim=1) 
-        params['input_dim_stage2'] = input_stage2.shape[1] # (H_2)
+        # Filter based on indices in test
+        Ci = Ci[test_patient_ids].to(device)
+        O1_filtered = O1_filtered[:, test_patient_ids].to(device)
+        O2_filtered = O2_filtered[:, test_patient_ids].to(device)
+        Y1_filtered = Y1_filtered[test_patient_ids].to(device)
+        Y2_filtered = Y2_filtered[test_patient_ids].to(device)
+        A1_filtered = A1_filtered[test_patient_ids].to(device)
+        A2_filtered = A2_filtered[test_patient_ids].to(device)
 
-        P_A1_given_H1_tensor_filtered = P_A1_given_H1_tensor_filtered[test_patient_ids]
-        P_A2_given_H2_tensor_filtered = P_A2_given_H2_tensor_filtered[test_patient_ids]
-        # ensure proper data types
-        input_stage1 = input_stage1.float()
-        input_stage2 = input_stage2.float()
-        Ci = Ci.float()
-        Y1_filtered = Y1_filtered.float()
-        Y2_filtered = Y2_filtered.float()
-        A1_filtered = A1_filtered.float()
-        A2_filtered = A2_filtered.float()
+        # Calculate input stages and move them to device
+        input_stage1 = O1_filtered.t().float().to(device)  
+        params['input_dim_stage1'] = input_stage1.shape[1]  # (H_1)
 
-        print("="*90)
+        input_stage2 = torch.cat([
+            O1_filtered.t(), 
+            A1_filtered.unsqueeze(1), 
+            Y1_filtered.unsqueeze(1), 
+            O2_filtered.t()
+        ], dim=1).float().to(device)
+        params['input_dim_stage2'] = input_stage2.shape[1]  # (H_2)
+
+        P_A1_given_H1_tensor_filtered = P_A1_given_H1_tensor_filtered[test_patient_ids].to(device)
+        P_A2_given_H2_tensor_filtered = P_A2_given_H2_tensor_filtered[test_patient_ids].to(device)
+
+        # Move other tensors to device
+        Ci = Ci.float().to(device)
+        Y1_filtered = Y1_filtered.float().to(device)
+        Y2_filtered = Y2_filtered.float().to(device)
+        A1_filtered = A1_filtered.float().to(device)
+        A2_filtered = A2_filtered.float().to(device)
+
+        print("=" * 90)
         print("pi_10: ", probs1['pi_10'].mean().item(), "pi_11: ", probs1['pi_11'].mean().item(), "pi_12: ", probs1['pi_12'].mean().item())
         print("pi_20: ", probs2['pi_20'].mean().item(), "pi_21: ", probs2['pi_21'].mean().item(), "pi_22: ", probs2['pi_22'].mean().item())
-        print("="*90)
+        print("=" * 90)
 
         print()
 
-        print("="*90)
-        print("Y1_beh mean: ", torch.mean(Y1) )
-        print("Y2_beh mean: ", torch.mean(Y2) )         
-        print("Y1_beh+Y2_beh mean: ", torch.mean(Y1+Y2) )
+        print("=" * 90)
+        print("Y1_beh mean: ", torch.mean(Y1))
+        print("Y2_beh mean: ", torch.mean(Y2))
+        print("Y1_beh+Y2_beh mean: ", torch.mean(Y1 + Y2))
 
-        print("="*90)
+        print("=" * 90)
         return input_stage1, input_stage2, O2_filtered.t(), Y1_filtered, Y2_filtered, A1_filtered, A2_filtered, P_A1_given_H1_tensor_filtered, P_A2_given_H2_tensor_filtered
-   
-    #filter based on train ids
-    train_patient_ids = torch.tensor(train_patient_ids)
-    O1_filtered = O1_filtered[:, train_patient_ids]
-    O2_filtered = O2_filtered[:, train_patient_ids]
-    pi_tensor_filtered = pi_tensor_filtered[:, train_patient_ids]
+
+    # Filter based on train ids         
+    O1_filtered = O1_filtered.to(device)
+    O2_filtered = O2_filtered.to(device)
+    train_patient_ids = torch.tensor(train_patient_ids).to(device)
+    O1_filtered = O1_filtered[:, train_patient_ids].to(device)
+    O2_filtered = O2_filtered[:, train_patient_ids].to(device)
+    pi_tensor_filtered = pi_tensor_filtered[:, train_patient_ids].to(device)
     print("shape", pi_tensor_filtered.shape)
-    Y1_filtered = Y1_filtered[train_patient_ids]
-    Y2_filtered = Y2_filtered[train_patient_ids]
-    A1_filtered = A1_filtered[train_patient_ids]
-    A2_filtered = A2_filtered[train_patient_ids]
-    Ci = Ci[train_patient_ids]
+    Y1_filtered = Y1_filtered[train_patient_ids].to(device)
+    Y2_filtered = Y2_filtered[train_patient_ids].to(device)
+    A1_filtered = A1_filtered[train_patient_ids].to(device)
+    A2_filtered = A2_filtered[train_patient_ids].to(device)
+    Ci = Ci[train_patient_ids].to(device)
 
-    input_stage1 = O1_filtered.t()
-    params['input_dim_stage1'] = input_stage1.shape[1] #  (H_1)  
-    print("dimesnions of input stage", len(input_stage1))
-    input_stage2 = torch.cat([O1_filtered.t(), A1_filtered.unsqueeze(1), Y1_filtered.unsqueeze(1), O2_filtered.t()], dim=1)         
-    params['input_dim_stage2'] = input_stage2.shape[1] # (H_2)
+    # Calculate input stages and move to device
+    input_stage1 = O1_filtered.t().float().to(device)
+    params['input_dim_stage1'] = input_stage1.shape[1]  # (H_1)
+    print("dimensions of input stage", len(input_stage1))
 
-    input_stage1 = input_stage1.float()
-    input_stage2 = input_stage2.float()
-    Ci = Ci.float()
-    Y1_filtered = Y1_filtered.float()
-    Y2_filtered = Y2_filtered.float()
-    A1_filtered = A1_filtered.float()
-    A2_filtered = A2_filtered.float()
-    # train_size = int(params['training_validation_prop'] * params['sample_size']) # this code is the main problem for divide by zero issue
+    input_stage2 = torch.cat([
+        O1_filtered.t(), 
+        A1_filtered.unsqueeze(1), 
+        Y1_filtered.unsqueeze(1), 
+        O2_filtered.t()
+    ], dim=1).float().to(device)
+    params['input_dim_stage2'] = input_stage2.shape[1]  # (H_2)
+
+    # Ensure proper data types and move to device
+    input_stage1 = input_stage1.to(device)
+    input_stage2 = input_stage2.to(device)
+    Ci = Ci.float().to(device)
+    Y1_filtered = Y1_filtered.float().to(device)
+    Y2_filtered = Y2_filtered.float().to(device)
+    A1_filtered = A1_filtered.float().to(device)
+    A2_filtered = A2_filtered.float().to(device)
+
+    # Calculate train size
     train_size = int(params['training_validation_prop'] * Y1_filtered.shape[0])
-    # print(" train_size, params['training_validation_prop'],  params['sample_size'], Y1_filtered.shape ===================>>>>>>>>>>>>>>>>>>>> ", train_size, params['training_validation_prop'],  params['sample_size'], Y1_filtered.shape[0])
 
-    train_tensors = [tensor[:train_size] for tensor in [input_stage1, input_stage2, Ci, Y1_filtered, Y2_filtered, A1_filtered, A2_filtered]]
-    val_tensors = [tensor[train_size:] for tensor in [input_stage1, input_stage2, Ci, Y1_filtered, Y2_filtered, A1_filtered, A2_filtered]]
+    # Split into train and validation tensors and move to device
+    train_tensors = [tensor[:train_size].to(device) for tensor in [input_stage1, input_stage2, Ci, Y1_filtered, Y2_filtered, A1_filtered, A2_filtered]]
+    val_tensors = [tensor[train_size:].to(device) for tensor in [input_stage1, input_stage2, Ci, Y1_filtered, Y2_filtered, A1_filtered, A2_filtered]]
 
-    # return tuple(train_tensors), tuple(val_tensors)
-    return tuple(train_tensors), tuple(val_tensors), tuple([O1_filtered.t(), O2_filtered.t(), Y1_filtered, Y2_filtered, A1_filtered, A2_filtered, pi_tensor_filtered])
+    # Return train, validation, and additional tensors on the device
+    return tuple(train_tensors), tuple(val_tensors), tuple([O1_filtered.t().to(device), O2_filtered.t().to(device), Y1_filtered, Y2_filtered, A1_filtered, A2_filtered, pi_tensor_filtered])
 
+
+#     if run == 'test':
+#         # filter based on indices in test
+#         test_patient_ids = torch.tensor(test_patient_ids)
+#         Ci = Ci[test_patient_ids]
+#         O1_filtered = O1_filtered[:, test_patient_ids]
+#         O2_filtered = O2_filtered[:, test_patient_ids]
+#         Y1_filtered = Y1_filtered[test_patient_ids]
+#         Y2_filtered = Y2_filtered[test_patient_ids]
+#         A1_filtered = A1_filtered[test_patient_ids]
+#         A2_filtered = A2_filtered[test_patient_ids]
+
+#         # calculate input stages
+#         input_stage1 = O1_filtered.t()         
+#         params['input_dim_stage1'] = input_stage1.shape[1] #  (H_1)  
+#         input_stage2 = torch.cat([O1_filtered.t(), A1_filtered.unsqueeze(1), Y1_filtered.unsqueeze(1), O2_filtered.t()], dim=1) 
+#         params['input_dim_stage2'] = input_stage2.shape[1] # (H_2)
+
+#         P_A1_given_H1_tensor_filtered = P_A1_given_H1_tensor_filtered[test_patient_ids]
+#         P_A2_given_H2_tensor_filtered = P_A2_given_H2_tensor_filtered[test_patient_ids]
+#         # ensure proper data types
+#         input_stage1 = input_stage1.float()
+#         input_stage2 = input_stage2.float()
+#         Ci = Ci.float()
+#         Y1_filtered = Y1_filtered.float()
+#         Y2_filtered = Y2_filtered.float()
+#         A1_filtered = A1_filtered.float()
+#         A2_filtered = A2_filtered.float()
+
+#         print("="*90)
+#         print("pi_10: ", probs1['pi_10'].mean().item(), "pi_11: ", probs1['pi_11'].mean().item(), "pi_12: ", probs1['pi_12'].mean().item())
+#         print("pi_20: ", probs2['pi_20'].mean().item(), "pi_21: ", probs2['pi_21'].mean().item(), "pi_22: ", probs2['pi_22'].mean().item())
+#         print("="*90)
+
+#         print()
+
+#         print("="*90)
+#         print("Y1_beh mean: ", torch.mean(Y1) )
+#         print("Y2_beh mean: ", torch.mean(Y2) )         
+#         print("Y1_beh+Y2_beh mean: ", torch.mean(Y1+Y2) )
+
+#         print("="*90)
+#         return input_stage1, input_stage2, O2_filtered.t(), Y1_filtered, Y2_filtered, A1_filtered, A2_filtered, P_A1_given_H1_tensor_filtered, P_A2_given_H2_tensor_filtered
+   
+#     #filter based on train ids
+#     train_patient_ids = torch.tensor(train_patient_ids)
+#     O1_filtered = O1_filtered[:, train_patient_ids]
+#     O2_filtered = O2_filtered[:, train_patient_ids]
+#     pi_tensor_filtered = pi_tensor_filtered[:, train_patient_ids]
+#     print("shape", pi_tensor_filtered.shape)
+#     Y1_filtered = Y1_filtered[train_patient_ids]
+#     Y2_filtered = Y2_filtered[train_patient_ids]
+#     A1_filtered = A1_filtered[train_patient_ids]
+#     A2_filtered = A2_filtered[train_patient_ids]
+#     Ci = Ci[train_patient_ids]
+
+#     input_stage1 = O1_filtered.t()
+#     params['input_dim_stage1'] = input_stage1.shape[1] #  (H_1)  
+#     print("dimesnions of input stage", len(input_stage1))
+#     input_stage2 = torch.cat([O1_filtered.t(), A1_filtered.unsqueeze(1), Y1_filtered.unsqueeze(1), O2_filtered.t()], dim=1)         
+#     params['input_dim_stage2'] = input_stage2.shape[1] # (H_2)
+
+#     input_stage1 = input_stage1.float()
+#     input_stage2 = input_stage2.float()
+#     Ci = Ci.float()
+#     Y1_filtered = Y1_filtered.float()
+#     Y2_filtered = Y2_filtered.float()
+#     A1_filtered = A1_filtered.float()
+#     A2_filtered = A2_filtered.float()
+#     # train_size = int(params['training_validation_prop'] * params['sample_size']) # this code is the main problem for divide by zero issue
+#     train_size = int(params['training_validation_prop'] * Y1_filtered.shape[0])
+#     # print(" train_size, params['training_validation_prop'],  params['sample_size'], Y1_filtered.shape ===================>>>>>>>>>>>>>>>>>>>> ", train_size, params['training_validation_prop'],  params['sample_size'], Y1_filtered.shape[0])
+
+#     train_tensors = [tensor[:train_size] for tensor in [input_stage1, input_stage2, Ci, Y1_filtered, Y2_filtered, A1_filtered, A2_filtered]]
+#     val_tensors = [tensor[train_size:] for tensor in [input_stage1, input_stage2, Ci, Y1_filtered, Y2_filtered, A1_filtered, A2_filtered]]
+
+#     # return tuple(train_tensors), tuple(val_tensors)
+#     return tuple(train_tensors), tuple(val_tensors), tuple([O1_filtered.t(), O2_filtered.t(), Y1_filtered, Y2_filtered, A1_filtered, A2_filtered, pi_tensor_filtered])
+
+
+
+
+
+
+# def surr_opt(tuple_train, tuple_val, params, config_number, ensemble_num, option_sur):
+    
+#     sample_size = params['sample_size'] 
+    
+#     train_losses, val_losses = [], []
+#     best_val_loss, best_model_stage1_params, best_model_stage2_params, epoch_num_model = float('inf'), None, None, 0
+
+#     nn_stage1 = initialize_and_prepare_model(1, params)
+#     nn_stage2 = initialize_and_prepare_model(2, params)
+
+#     optimizer, scheduler = initialize_optimizer_and_scheduler(nn_stage1, nn_stage2, params)
+
+#     #  Training and Validation data
+#     train_data = {'input1': tuple_train[0], 'input2': tuple_train[1], 'Ci': tuple_train[2], 'A1': tuple_train[5], 'A2': tuple_train[6]}
+#     val_data = {'input1': tuple_val[0], 'input2': tuple_val[1], 'Ci': tuple_val[2], 'A1': tuple_val[5], 'A2': tuple_val[6]}
+
+
+#     # Training and Validation loop for both stages  
+#     for epoch in range(params['n_epoch']):  
+
+#         train_loss = process_batches(nn_stage1, nn_stage2, train_data, params, optimizer, option_sur=option_sur, is_train=True)
+#         train_losses.append(train_loss)
+
+#         val_loss = process_batches(nn_stage1, nn_stage2, val_data, params, optimizer, option_sur=option_sur, is_train=False)
+#         val_losses.append(val_loss)
+
+#         # train_loss = process_batches(nn_stage1, nn_stage2, train_data, params, optimizer, is_train=True)
+#         # train_losses.append(train_loss)
+
+#         # val_loss = process_batches(nn_stage1, nn_stage2, val_data, params, optimizer, is_train=False)
+#         # val_losses.append(val_loss)
+
+#         if val_loss < best_val_loss:
+#             epoch_num_model = epoch
+#             best_val_loss = val_loss
+#             best_model_stage1_params = nn_stage1.state_dict()
+#             best_model_stage2_params = nn_stage2.state_dict()
+
+#         # Update the scheduler with the current epoch's validation loss
+#         update_scheduler(scheduler, params, val_loss)
+
+#     model_dir = f"models/{params['job_id']}"
+#     # Check if the directory exists, if not, create it
+#     if not os.path.exists(model_dir):
+#         os.makedirs(model_dir)
+    
+#     # Define file paths for saving models
+#     # model_path_stage1 = os.path.join(model_dir, f'best_model_stage_surr_1_{sample_size}_config_number_{config_number}.pt')
+#     # model_path_stage2 = os.path.join(model_dir, f'best_model_stage_surr_2_{sample_size}_config_number_{config_number}.pt')
+
+#     model_path_stage1 = os.path.join(model_dir, f'best_model_stage_surr_1_{sample_size}_config_number_{config_number}_ensemble_num_{ensemble_num}.pt')
+#     model_path_stage2 = os.path.join(model_dir, f'best_model_stage_surr_2_{sample_size}_config_number_{config_number}_ensemble_num_{ensemble_num}.pt')
+
+
+#     # Save the models
+#     torch.save(best_model_stage1_params, model_path_stage1)
+#     torch.save(best_model_stage2_params, model_path_stage2)
+    
+#     return ((train_losses, val_losses), epoch_num_model)
+
+
+
+class CustomDataset(Dataset):
+    def __init__(self, data):
+        self.data = data
+        self.length = data['input1'].shape[0]
+
+    def __len__(self):
+        return self.length
+
+    def __getitem__(self, idx):
+        sample = {k: v[idx] for k, v in self.data.items()}
+        return sample
 
 
 def surr_opt(tuple_train, tuple_val, params, config_number, ensemble_num, option_sur):
+    sample_size = params['sample_size']
+    device = params['device']
+    n_epoch = params['n_epoch']
+    batch_size = params['batch_size']
+    # batches_to_sample =  params['batches_to_sample']
     
-    sample_size = params['sample_size'] 
+    eval_freq =  params['eval_freq'] # params.get('eval_freq', 10)  # Evaluate every 10 steps by default
+    # early_stopping_patience =  params['early_stopping_patience'] # params.get('early_stopping_patience', 10)  
+    ema_alpha =  params['ema_alpha']
+    stabilization_patience =  params['stabilization_patience'] # params.get('stabilization_patience', 5)  # New stabilization check threshold
     
-    train_losses, val_losses = [], []
-    best_val_loss, best_model_stage1_params, best_model_stage2_params, epoch_num_model = float('inf'), None, None, 0
+    # # Calculate the number of steps (batches) per epoch
+    # steps_per_epoch = sample_size // batch_size
+    # # Calculate evaluations per epoch based on eval_freq
+    # evaluations_per_epoch = steps_per_epoch // eval_freq
+    # # Set stabilization_patience as a multiple of evaluations per epoch
+    # stabilization_patience = evaluations_per_epoch //  params['stabilization_patience']
+    
+    reinitializations_allowed =  params['reinitializations_allowed'] # params.get('reinitializations_allowed', 2)  # Limit reinitializations
 
+    # Initialize models
     nn_stage1 = initialize_and_prepare_model(1, params)
     nn_stage2 = initialize_and_prepare_model(2, params)
 
+    # Initialize optimizer and scheduler
     optimizer, scheduler = initialize_optimizer_and_scheduler(nn_stage1, nn_stage2, params)
 
-    #  Training and Validation data
-    train_data = {'input1': tuple_train[0], 'input2': tuple_train[1], 'Ci': tuple_train[2], 'A1': tuple_train[5], 'A2': tuple_train[6]}
-    val_data = {'input1': tuple_val[0], 'input2': tuple_val[1], 'Ci': tuple_val[2], 'A1': tuple_val[5], 'A2': tuple_val[6]}
+    # Prepare training and validation data
+    train_data = {
+        'input1': tuple_train[0], 'input2': tuple_train[1], 'Ci': tuple_train[2],
+        'A1': tuple_train[5], 'A2': tuple_train[6]
+    }
+    val_data = {
+        'input1': tuple_val[0], 'input2': tuple_val[1], 'Ci': tuple_val[2],
+        'A1': tuple_val[5], 'A2': tuple_val[6]
+    }
+
+    # Create datasets and data loaders
+    train_dataset = CustomDataset(train_data)
+    val_dataset = CustomDataset(val_data)
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
+
+    # Training variables
+    train_losses = []
+    val_losses = []
+    best_val_loss = float('inf')
+    best_model_stage1_params = None
+    best_model_stage2_params = None
+    epoch_num_model = 0
+    total_steps = 0
+    no_improvement_count = 0  # Early stopping counter
+    ema_val_loss = None
+    reinitialization_count = 0  # Track reinitializations
+    
+    early_stop = False  # Set the flag to break the outer loop
 
 
-    # Training and Validation loop for both stages  
-    for epoch in range(params['n_epoch']):  
 
-        train_loss = process_batches(nn_stage1, nn_stage2, train_data, params, optimizer, option_sur=option_sur, is_train=True)
-        train_losses.append(train_loss)
+    # For tabular display
+    loss_table = pd.DataFrame(columns=['Epoch', 'Avg Training Loss', 'Avg Validation Loss'])
 
-        val_loss = process_batches(nn_stage1, nn_stage2, val_data, params, optimizer, option_sur=option_sur, is_train=False)
-        val_losses.append(val_loss)
+    for epoch in range(n_epoch):
+        
+        if early_stop:
+            break  # Break out of the epoch loop if early stopping is triggered
 
-        # train_loss = process_batches(nn_stage1, nn_stage2, train_data, params, optimizer, is_train=True)
-        # train_losses.append(train_loss)
+        nn_stage1.train()
+        nn_stage2.train()
 
-        # val_loss = process_batches(nn_stage1, nn_stage2, val_data, params, optimizer, is_train=False)
-        # val_losses.append(val_loss)
+        # Accumulate loss over batches for the epoch
+        running_train_loss = 0.0
+        running_val_loss = 0.0
+        num_batches = 0
+        num_val_steps = 0
 
-        if val_loss < best_val_loss:
-            epoch_num_model = epoch
-            best_val_loss = val_loss
-            best_model_stage1_params = nn_stage1.state_dict()
-            best_model_stage2_params = nn_stage2.state_dict()
+        for batch_data in train_loader:   
 
-        # Update the scheduler with the current epoch's validation loss
-        update_scheduler(scheduler, params, val_loss)
+            total_steps += 1
+            num_batches += 1
 
+            batch_data = {k: v.to(device) for k, v in batch_data.items()}
+
+            # Forward pass
+            outputs_stage1 = nn_stage1(batch_data['input1'])
+            outputs_stage2 = nn_stage2(batch_data['input2'])
+
+            outputs_stage1 = torch.stack(outputs_stage1, dim=1).squeeze()
+            outputs_stage2 = torch.stack(outputs_stage2, dim=1).squeeze()
+
+            # Compute loss
+            loss = main_loss_gamma(
+                outputs_stage1, outputs_stage2, batch_data['A1'], batch_data['A2'], 
+                batch_data['Ci'], option=option_sur, surrogate_num=params['surrogate_num']
+            )
+
+            # Backward and optimize
+            optimizer.zero_grad()
+            loss.backward()
+
+            # Gradient Clipping (to prevent exploding gradients)
+            if params['gradient_clipping']:
+                torch.nn.utils.clip_grad_norm_(nn_stage1.parameters(), max_norm=1.0)
+                torch.nn.utils.clip_grad_norm_(nn_stage2.parameters(), max_norm=1.0)
+
+            optimizer.step() 
+            running_train_loss += loss.item()
+
+            # Evaluate model at specified frequency
+            if total_steps % eval_freq == 0:            
+                val_loss = evaluate_model(nn_stage1, nn_stage2, val_loader, params)
+                running_val_loss += val_loss
+                num_val_steps += 1                     
+
+                # Save the best model
+                # if val_loss < best_val_loss:
+                #     epoch_num_model = epoch
+                #     best_val_loss = val_loss
+                #     best_model_stage1_params = copy.deepcopy(nn_stage1.state_dict())
+                #     best_model_stage2_params = copy.deepcopy(nn_stage2.state_dict())
+                #     no_improvement_count = 0  # Reset early stopping counter
+                
+                # Calculate EMA of validation loss
+                if ema_val_loss is None:
+                    ema_val_loss = val_loss
+                else:
+                    ema_val_loss = ema_alpha * val_loss + (1 - ema_alpha) * ema_val_loss
+                
+                # Save the best model using EMA of validation loss
+                if ema_val_loss < best_val_loss:
+                    # print(" Improved ---> ema_val_loss, best_val_loss: Saving the model...",  ema_val_loss, best_val_loss) 
+                    print(f"Improved ---> ema_val_loss: {ema_val_loss}, best_val_loss: {best_val_loss}. Saving the model...")
+
+                    epoch_num_model = epoch
+                    best_val_loss = ema_val_loss
+                    best_model_stage1_params = copy.deepcopy(nn_stage1.state_dict())
+                    best_model_stage2_params = copy.deepcopy(nn_stage2.state_dict())
+                    no_improvement_count = 0  # Reset early stopping counter                    
+                else:
+                    # print(" Did not improve ---> ema_val_loss, best_val_loss, no_improvement_count, stabilization_patience",  ema_val_loss, best_val_loss, no_improvement_count, stabilization_patience)
+                    print(f"Did not improve ---> ema_val_loss: {ema_val_loss}, best_val_loss: {best_val_loss}, no_improvement_count: {no_improvement_count}, stabilization_patience: {stabilization_patience}")
+
+                    no_improvement_count += 1  # Increment early stopping counter
+                    
+                    
+                # Check stabilization condition
+                if reinitialization_count < reinitializations_allowed and no_improvement_count >= stabilization_patience:
+                    print(f"Validation loss stabilized <<<<<<<<<<---------->>>>>>>>>> reinitializing model at epoch {epoch + 1}")
+                    
+                    nn_stage1 = initialize_and_prepare_model(1, params)  # Reinitialize model 1
+                    nn_stage2 = initialize_and_prepare_model(2, params)  # Reinitialize model 2
+                    optimizer, scheduler = initialize_optimizer_and_scheduler(nn_stage1, nn_stage2, params)
+                    no_improvement_count = 0  # Reset counter after reinitialization
+                    reinitialization_count += 1
+                    
+                 # Early stopping condition based on best_val_loss
+                if params['early_stopping'] and reinitialization_count >= reinitializations_allowed and no_improvement_count >= stabilization_patience:
+                    print(f"Early stopping after {epoch + 1} epochs due to no further improvement.")                 
+                    early_stop = True  # Set the flag to break the outer loop
+                    break
+
+                # # Early stopping check 
+                # if params['early_stopping'] and no_improvement_count >= early_stopping_patience:
+                #     print(f"Early stopping triggered after {epoch + 1} epochs.")
+                #     break
+
+                # Update scheduler if necessary
+                update_scheduler(scheduler, params, val_loss)                 
+                # update_scheduler(scheduler, params, ema_val_loss)
+
+
+        # Calculate and store average training loss for this epoch
+        avg_train_loss = running_train_loss / num_batches
+        train_losses.append(avg_train_loss)  
+        print(" total_steps   ---->  ",  total_steps)  
+        print(" num_batches   ---->  ",  num_batches)                 
+        print(" num_val_steps   ---->  ",  num_val_steps)
+
+
+        if num_val_steps > 0:
+            avg_val_loss = running_val_loss / num_val_steps
+            val_losses.append(avg_val_loss)
+        else:
+            val_losses.append(float('nan'))  # In case there were no validation steps this epoch
+            
+        print()
+        print(f'Epoch [{epoch+1}/{n_epoch}], Average Training Loss: {avg_train_loss:.4f}, Average Validation Loss: {avg_val_loss if num_val_steps > 0 else "N/A"}')
+        print("_"*90)
+        
+        # Append to the table
+        new_row = pd.DataFrame({
+            'Epoch': [epoch + 1],
+            'Avg Training Loss': [avg_train_loss],
+            'Avg Validation Loss': [avg_val_loss if num_val_steps > 0 else "N/A"]
+        })
+        loss_table = pd.concat([loss_table, new_row], ignore_index=True)
+
+    
+
+    # Print the table at the end of training
+    print()
+    print("LOSS TABLE: ")
+    print(loss_table.to_string(index=False))
+    print()
+
+    # Save the best model parameters
     model_dir = f"models/{params['job_id']}"
-    # Check if the directory exists, if not, create it
-    if not os.path.exists(model_dir):
-        os.makedirs(model_dir)
-    
+    os.makedirs(model_dir, exist_ok=True)
+
     # Define file paths for saving models
-    # model_path_stage1 = os.path.join(model_dir, f'best_model_stage_surr_1_{sample_size}_config_number_{config_number}.pt')
-    # model_path_stage2 = os.path.join(model_dir, f'best_model_stage_surr_2_{sample_size}_config_number_{config_number}.pt')
-
-    model_path_stage1 = os.path.join(model_dir, f'best_model_stage_surr_1_{sample_size}_config_number_{config_number}_ensemble_num_{ensemble_num}.pt')
-    model_path_stage2 = os.path.join(model_dir, f'best_model_stage_surr_2_{sample_size}_config_number_{config_number}_ensemble_num_{ensemble_num}.pt')
-
-
-    # Save the models
-    torch.save(best_model_stage1_params, model_path_stage1)
-    torch.save(best_model_stage2_params, model_path_stage2)
+    model_path_stage1 = os.path.join(
+        model_dir, f'best_model_stage_surr_1_{sample_size}_config_number_{config_number}_ensemble_num_{ensemble_num}.pt')
     
+    model_path_stage2 = os.path.join(
+        model_dir, f'best_model_stage_surr_2_{sample_size}_config_number_{config_number}_ensemble_num_{ensemble_num}.pt')
+
+
+    # Ensure the model parameters are not None before saving
+    if best_model_stage1_params is not None and best_model_stage2_params is not None:
+        # Save models
+        torch.save(best_model_stage1_params, model_path_stage1)
+        torch.save(best_model_stage2_params, model_path_stage2)
+
+        # Verify that files were saved correctly
+        if os.path.isfile(model_path_stage1) and os.path.getsize(model_path_stage1) > 0:
+            print(f"Model stage 1 saved successfully at {model_path_stage1}")
+        else:
+            print(f"Error: Model stage 1 was not saved correctly at {model_path_stage1}")
+
+        if os.path.isfile(model_path_stage2) and os.path.getsize(model_path_stage2) > 0:
+            print(f"Model stage 2 saved successfully at {model_path_stage2}")
+        else:
+            print(f"Error: Model stage 2 was not saved correctly at {model_path_stage2}")
+    else:
+        print("Error: Model parameters are None, not saving the models.")
+
     return ((train_losses, val_losses), epoch_num_model)
 
 
