@@ -37,6 +37,7 @@ from rpy2.robjects import numpy2ri
 # # Load the R script to avoid dynamic loading
 # ro.r.source("ACWL_tao.R")
 
+
 # Set the device
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -854,7 +855,7 @@ def main_loss_gamma(stage1_outputs, stage2_outputs, A1, A2, Ci, option, surrogat
 
 
 
-def process_batches(model1, model2, data, params, optimizer, is_train=True):
+def process_batches(model1, model2, data, params, optimizer, option_sur, is_train=True):
     batch_size = params['batch_size']
     total_loss = 0
     num_batches = (data['input1'].shape[0] + batch_size - 1) // batch_size 
@@ -880,7 +881,7 @@ def process_batches(model1, model2, data, params, optimizer, is_train=True):
             outputs_stage2 = torch.stack(outputs_stage2, dim=1).squeeze()
 
             loss = main_loss_gamma(outputs_stage1, outputs_stage2, batch_data['A1'], batch_data['A2'], 
-                                   batch_data['Ci'], option=params['option_sur'], surrogate_num=params['surrogate_num'])
+                                   batch_data['Ci'], option=option_sur, surrogate_num=params['surrogate_num'])
             if is_train:
                 optimizer.zero_grad()
                 loss.backward()
@@ -1133,14 +1134,42 @@ def compute_test_outputs(nn, test_input, A_tensor, params, is_stage1=True):
 
 
 
-def initialize_and_load_model(stage, sample_size, params, config_number):
+# def initialize_and_load_model(stage, sample_size, params, config_number):
+#     # Initialize the neural network model
+#     nn_model = initialize_nn(params, stage).to(params['device'])
+    
+#     # Define the directory and file name for the model
+#     model_dir = f"models/{params['job_id']}"
+#     if params['f_model']=="surr_opt":
+#         model_filename = f'best_model_stage_surr_{stage}_{sample_size}_config_number_{config_number}.pt'
+#     else:
+#         model_filename = f'best_model_stage_Q_{stage}_{sample_size}_config_number_{config_number}.pt'
+        
+#     model_path = os.path.join(model_dir, model_filename)
+    
+#     # Check if the model file exists before attempting to load
+#     if not os.path.exists(model_path):
+#         warnings.warn(f"No model file found at {model_path}. Please check the file path and model directory.")
+#         return None  # or handle the error as needed
+    
+#     # Load the model's state dictionary from the file
+#     nn_model.load_state_dict(torch.load(model_path, map_location=params['device']))
+    
+#     # Set the model to evaluation mode
+#     nn_model.eval()
+    
+#     return nn_model
+
+
+
+def initialize_and_load_model(stage, sample_size, params, config_number, ensemble_num=1):
     # Initialize the neural network model
     nn_model = initialize_nn(params, stage).to(params['device'])
     
     # Define the directory and file name for the model
     model_dir = f"models/{params['job_id']}"
     if params['f_model']=="surr_opt":
-        model_filename = f'best_model_stage_surr_{stage}_{sample_size}_config_number_{config_number}.pt'
+        model_filename = f'best_model_stage_surr_{stage}_{sample_size}_config_number_{config_number}_ensemble_num_{ensemble_num}.pt'
     else:
         model_filename = f'best_model_stage_Q_{stage}_{sample_size}_config_number_{config_number}.pt'
         
@@ -1158,8 +1187,6 @@ def initialize_and_load_model(stage, sample_size, params, config_number):
     nn_model.eval()
     
     return nn_model
-
-
 
 # utils value function estimator
 
@@ -1447,7 +1474,133 @@ def calculate_policy_values_W_estimator(train_tens, params, A1, A2, P_A1_given_H
 
 
 
-def evaluate_method(method_name, params, config_number, df, test_input_stage1, A1_tensor_test, test_input_stage2, A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2, tmp):
+def evaluate_method_DS(method_name, params, config_number, df, test_input_stage1, A1_tensor_test, test_input_stage2, A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2, tmp):
+    # Initialize and load models for the method 
+    # nn_stage1 = initialize_and_load_model(1, params['sample_size'], params, config_number)
+    # nn_stage2 = initialize_and_load_model(2, params['sample_size'], params, config_number)
+
+    # # Calculate test outputs for all networks in stage 1
+    # A1 = compute_test_outputs(nn=nn_stage1, 
+    #                           test_input=test_input_stage1, 
+    #                           A_tensor=A1_tensor_test, 
+    #                           params=params, 
+    #                           is_stage1=True)
+
+    # # Calculate test outputs for all networks in stage 2
+    # A2 = compute_test_outputs(nn=nn_stage2, 
+    #                           test_input=test_input_stage2, 
+    #                           A_tensor=A2_tensor_test, 
+    #                           params=params, 
+    #                           is_stage1=False)
+    
+    # # Print first 20 predictions using current policy 
+    # print_predictions_in_box(method_name, A1, A2)   
+
+
+    # Define a function for majority voting using PyTorch
+    def max_voting(votes):
+        # votes is a tensor of shape (ensemble_count, num_samples)
+        # Perform voting by getting the most frequent element in each column (sample)
+        return torch.mode(votes, dim=0).values  # Returns the most frequent element along the ensemble axis
+
+    # Initialize lists to store the predictions for A1 and A2 across the ensemble
+    A1_ensemble = []
+    A2_ensemble = []
+
+    # Loop through each ensemble member
+    for ensemble_num in range(params['ensemble_count']):
+        print()
+        print(f"***************************************** Test -> Agent #: {ensemble_num}*****************************************")
+        print()
+        # Initialize and load models for the current ensemble member
+        nn_stage1 = initialize_and_load_model(1, params['sample_size'], params, config_number, ensemble_num=ensemble_num)
+        nn_stage2 = initialize_and_load_model(2, params['sample_size'], params, config_number, ensemble_num=ensemble_num)
+        
+        # Calculate test outputs for stage 1
+        A1 = compute_test_outputs(nn=nn_stage1, 
+                                test_input=test_input_stage1, 
+                                A_tensor=A1_tensor_test, 
+                                params=params, 
+                                is_stage1=True)
+        
+        # Calculate test outputs for stage 2
+        A2 = compute_test_outputs(nn=nn_stage2, 
+                                test_input=test_input_stage2, 
+                                A_tensor=A2_tensor_test, 
+                                params=params, 
+                                is_stage1=False)
+        
+        # Append the outputs for each ensemble member (A1 and A2 predictions)
+        A1_ensemble.append(A1)
+        A2_ensemble.append(A2)
+
+    # Convert lists to PyTorch tensors of shape (ensemble_count, num_samples)
+    A1_ensemble = torch.stack(A1_ensemble)  # Tensor of shape (ensemble_count, num_samples)
+    A2_ensemble = torch.stack(A2_ensemble)  # Tensor of shape (ensemble_count, num_samples)
+
+    # Perform majority voting across the ensemble for A1 and A2
+    A1 = max_voting(A1_ensemble)  # Output of shape (num_samples,) with voted actions for A1
+    A2 = max_voting(A2_ensemble)  # Output of shape (num_samples,) with voted actions for A2
+
+    # Print top 20 ensemble predictions and their corresponding majority votes in a stacked format
+    print("\nTop 20 Ensemble Predictions and Majority Votes for A1 (stacked format):")
+    for i in range(20):
+        print(f"Sample {i+1}:")
+        stacked_A1 = torch.cat([A1_ensemble[:, i], A1[i].unsqueeze(0)])  # Stack ensemble predictions and majority vote
+        print(f"  Ensemble A1 predictions + Voted A1 action: {stacked_A1.tolist()}")  # Print stacked format
+
+    print("\nTop 20 Ensemble Predictions and Majority Votes for A2 (stacked format):")
+    for i in range(20):
+        print(f"Sample {i+1}:")
+        stacked_A2 = torch.cat([A2_ensemble[:, i], A2[i].unsqueeze(0)])  # Stack ensemble predictions and majority vote
+        print(f"  Ensemble A2 predictions + Voted A2 action: {stacked_A2.tolist()}")  # Print stacked format
+
+
+
+    # Append to DataFrame
+    new_row = {
+        'Behavioral_A1': A1_tensor_test.cpu().numpy().tolist(),
+        'Behavioral_A2': A2_tensor_test.cpu().numpy().tolist(),
+        'Predicted_A1': A1.cpu().numpy().tolist(),
+        'Predicted_A2': A2.cpu().numpy().tolist()
+    }
+    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+
+    # Calculate policy values using the DR estimator
+
+    # Duplicate the params dictionary
+    param_W = params.copy()
+
+    # Update specific values in param_W  if testing is fixed 
+    param_W.update({
+        'num_networks': 1,
+        'num_layers':  tmp[0], #initial_config['num_layers'],
+        'hidden_dim_stage1': tmp[1], #initial_config['hidden_dim_stage1'],
+        'hidden_dim_stage2': tmp[2], #initial_config['hidden_dim_stage2']
+        'activation_function': tmp[3], #initial_config['activation_function'], #'elu', 'relu', 'sigmoid', 'tanh', 'leakyrelu', 'none' 
+    }) 
+        
+    if params["f_model"]!="DQlearning":
+        param_W.update({
+              'input_dim_stage1': params['input_dim_stage1'] + 1, # (H_1, A_1)
+              'input_dim_stage2': params['input_dim_stage2'] + 1, # (H_2, A_2)
+          })
+        
+        
+    V_replications_M1_pred = calculate_policy_values_W_estimator(train_tensors, param_W, A1, A2, P_A1_g_H1, P_A2_g_H2, config_number)
+
+
+    # V_replications_M1_pred = calculate_policy_values_W_estimator(train_tensors, params, A1, A2, P_A1_g_H1, P_A2_g_H2, config_number)
+
+
+    # print(f"{method_name} estimator: ")
+
+    return df, V_replications_M1_pred, param_W
+
+
+
+
+def evaluate_method_DQL(method_name, params, config_number, df, test_input_stage1, A1_tensor_test, test_input_stage2, A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2, tmp):
     # Initialize and load models for the method 
     nn_stage1 = initialize_and_load_model(1, params['sample_size'], params, config_number)
     nn_stage2 = initialize_and_load_model(2, params['sample_size'], params, config_number)
@@ -1827,7 +1980,7 @@ def load_and_preprocess_data(params, replication_seed, config_seed, run='train')
 
 
 
-def surr_opt(tuple_train, tuple_val, params, config_number):
+def surr_opt(tuple_train, tuple_val, params, config_number, ensemble_num, option_sur):
     
     sample_size = params['sample_size'] 
     
@@ -1847,11 +2000,17 @@ def surr_opt(tuple_train, tuple_val, params, config_number):
     # Training and Validation loop for both stages  
     for epoch in range(params['n_epoch']):  
 
-        train_loss = process_batches(nn_stage1, nn_stage2, train_data, params, optimizer, is_train=True)
+        train_loss = process_batches(nn_stage1, nn_stage2, train_data, params, optimizer, option_sur=option_sur, is_train=True)
         train_losses.append(train_loss)
 
-        val_loss = process_batches(nn_stage1, nn_stage2, val_data, params, optimizer, is_train=False)
+        val_loss = process_batches(nn_stage1, nn_stage2, val_data, params, optimizer, option_sur=option_sur, is_train=False)
         val_losses.append(val_loss)
+
+        # train_loss = process_batches(nn_stage1, nn_stage2, train_data, params, optimizer, is_train=True)
+        # train_losses.append(train_loss)
+
+        # val_loss = process_batches(nn_stage1, nn_stage2, val_data, params, optimizer, is_train=False)
+        # val_losses.append(val_loss)
 
         if val_loss < best_val_loss:
             epoch_num_model = epoch
@@ -1868,9 +2027,13 @@ def surr_opt(tuple_train, tuple_val, params, config_number):
         os.makedirs(model_dir)
     
     # Define file paths for saving models
-    model_path_stage1 = os.path.join(model_dir, f'best_model_stage_surr_1_{sample_size}_config_number_{config_number}.pt')
-    model_path_stage2 = os.path.join(model_dir, f'best_model_stage_surr_2_{sample_size}_config_number_{config_number}.pt')
-        
+    # model_path_stage1 = os.path.join(model_dir, f'best_model_stage_surr_1_{sample_size}_config_number_{config_number}.pt')
+    # model_path_stage2 = os.path.join(model_dir, f'best_model_stage_surr_2_{sample_size}_config_number_{config_number}.pt')
+
+    model_path_stage1 = os.path.join(model_dir, f'best_model_stage_surr_1_{sample_size}_config_number_{config_number}_ensemble_num_{ensemble_num}.pt')
+    model_path_stage2 = os.path.join(model_dir, f'best_model_stage_surr_2_{sample_size}_config_number_{config_number}_ensemble_num_{ensemble_num}.pt')
+
+
     # Save the models
     torch.save(best_model_stage1_params, model_path_stage1)
     torch.save(best_model_stage2_params, model_path_stage2)
@@ -2027,7 +2190,7 @@ def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql
         print("="*60)
         
         start_time = time.time()  # Start time recording
-        df_DQL, V_rep_DQL, param_W_DQL = evaluate_method('DQL', params_dql, config_number, df_DQL, test_input_stage1, A1_tensor_test, test_input_stage2, 
+        df_DQL, V_rep_DQL, param_W_DQL = evaluate_method_DQL('DQL', params_dql, config_number, df_DQL, test_input_stage1, A1_tensor_test, test_input_stage2, 
                                             A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2, tmp)
         end_time = time.time()  # End time recording
         # Append value function for DQL
@@ -2049,7 +2212,7 @@ def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql
         print("="*60)
 
         start_time = time.time()  # Start time recording
-        df_DS, V_rep_DS, param_W_DS = evaluate_method('DS', params_ds, config_number, df_DS, test_input_stage1, A1_tensor_test, test_input_stage2, 
+        df_DS, V_rep_DS, param_W_DS = evaluate_method_DS('DS', params_ds, config_number, df_DS, test_input_stage1, A1_tensor_test, test_input_stage2, 
                                         A2_tensor_test, train_tensors, P_A1_g_H1, P_A2_g_H2, tmp)
         end_time = time.time()  # End time recording        
         
@@ -2214,13 +2377,33 @@ def simulations(V_replications, params, config_fixed, config_number):
             start_time = time.time()  # Start time recording
 
             if params['trainingFixed']:
-                trn_val_loss_tpl_DS, epoch_num_model_DS = surr_opt(tuple_train, tuple_val, params_DS_f, config_number)                 
+
+                for ensemble_num in range(params['ensemble_count']):
+                    print()
+                    print(f"***************************************** Train -> Agent #: {ensemble_num}*****************************************")
+                    print()
+                    if params['phi_ensemble']:
+                        option_sur = params['option_sur']
+                    else:
+                        option_sur = ensemble_num+1
+                    trn_val_loss_tpl_DS, epoch_num_model_DS = surr_opt(tuple_train, tuple_val, params_DS_f, config_number, ensemble_num, option_sur)                 
+                                  
+
                 config_dict['training_config']['DS'] = params_DS_f  # Store config for DS
                 # config_dict_training_config_DS = params_DS_f 
 
-
             else:
-                trn_val_loss_tpl_DS, epoch_num_model_DS = surr_opt(tuple_train, tuple_val, params_DS_u, config_number)
+
+                for ensemble_num in range(params['ensemble_count']):
+                    print()
+                    print(f"***************************************** Train -> Agent #: {ensemble_num}*****************************************")
+                    print()
+                    if params['phi_ensemble']:
+                        option_sur = params['option_sur']
+                    else:
+                        option_sur = ensemble_num+1
+                    trn_val_loss_tpl_DS, epoch_num_model_DS = surr_opt(tuple_train, tuple_val, params_DS_u, config_number, ensemble_num, option_sur)  
+
                 config_dict['training_config']['DS'] = params_DS_u  # Store config for DS
                 # config_dict_training_config_DS = params_DS_u 
 
