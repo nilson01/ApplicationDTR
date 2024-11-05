@@ -37,7 +37,6 @@ from rpy2.robjects import numpy2ri
 # # Load the R script to avoid dynamic loading
 # ro.r.source("ACWL_tao.R")
 
-
 # Set the device
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
