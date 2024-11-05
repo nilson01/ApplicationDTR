@@ -4,13 +4,14 @@ run_surr_opt: True
 run_adaptive_contrast_tao: False
 trainingFixed: True # True, False
 
-batch_size: 200 # Batch size calculated as a proportion of sample size
+num_replications: 4 # 30, 100
+batch_size: 800 # Batch size calculated as a proportion of sample size
 # batches_to_sample: 18 # 30 # Not used- ignore
 
 optimizer_lr: 0.007
-n_epoch: 30 # 150 # 60 # 150  # Number of training epochs
+n_epoch: 10 # 30 # 60 # 150  # Number of training epochs
 
-eval_freq: 2 # 2,3,5
+eval_freq: 2 # 1,2,3,5
 stabilization_patience: 5  # V1 3, 5, 7 
 ema_alpha: 0.3 # 0.1, 0.5 # EMA_new = (alpha * val_loss_new) + ((1 - alpha) * EMA_previous)  # High alpha (~1): more responsive, less smooth; Low alpha (~0): less responsive, smoother  to recent changes
 reinitializations_allowed: 3
@@ -22,8 +23,7 @@ phi_ensemble: False # if this is true keep ensemble_count to 5
 ensemble_count: 1 # 5
 
 
-
-activation_function: relu # elu, relu, sigmoid, tanh, leakyrelu, none # # CHANGEd INSIDE
+activation_function: none # elu, relu, sigmoid, tanh, leakyrelu, none # # CHANGEd INSIDE
 num_layers: 4 # 4 
 hidden_dim_stage1: 40  # 40, 
 hidden_dim_stage2: 40  # 40, 
@@ -42,7 +42,6 @@ add_ll_batch_norm: True
 f_model: "model_used"  # DQlearning, surr_opt, tao; will update this automatically later
 device: None  # Computation device, dynamically set to 'cuda' if GPU is available
 sample_size: 17368   # 3000  # Number of samples to be used -> including both stages total 36926 data points
-num_replications: 4 # 30, 100
 
 
 training_validation_prop: 0.8  # Proportion of data for training vs validation
@@ -60,7 +59,7 @@ scheduler_gamma: 0.8  # Decay rate for learning rate under StepLR
 optimizer_type: adam  # 'adam' or 'rmsprop'
 
 surrogate_num: 1  # Indicates the surrogate model configuration number
-option_sur: 2  # Specifies the operational mode or variant of the surrogate model
+option_sur: 1  # Specifies the operational mode or variant of the surrogate model
 contrast: 1
 initializer: he  # He initialization method (Kaiming initialization)
 

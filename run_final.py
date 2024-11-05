@@ -1219,7 +1219,50 @@ def initialize_and_load_model(stage, sample_size, params, config_number, ensembl
     
     return nn_model
 
-# utils value function estimator
+# utils value function estimator 
+
+# def train_and_validate_W_estimator(config_number, model, optimizer, scheduler, train_inputs, train_actions, train_targets, val_inputs, val_actions, val_targets, batch_size, device, n_epoch, stage_number, sample_size, params, resNum):
+#     train_losses, val_losses = [], []
+#     best_val_loss = float('inf')
+#     best_model_params = None
+#     epoch_num_model = 0
+
+#     for epoch in range(n_epoch):
+        
+#         train_loss = process_batches_DQL(model, train_inputs, train_actions, train_targets, params, optimizer, is_train=True)
+#         train_losses.append(train_loss)
+
+#         val_loss = process_batches_DQL(model, val_inputs, val_actions, val_targets, params, optimizer, is_train=False)
+#         val_losses.append(val_loss)
+        
+#         if val_loss < best_val_loss:
+#             epoch_num_model = epoch
+#             best_val_loss = val_loss
+#             best_model_params = model.state_dict()
+
+#         # Update the scheduler with the current epoch's validation loss
+#         update_scheduler(scheduler, params, val_loss)
+
+
+#     # Define file paths for saving models
+#     model_dir = f"models/{params['job_id']}"
+
+    
+#     # Check if the directory exists, if not, create it
+#     if not os.path.exists(model_dir):
+#         os.makedirs(model_dir)
+#         print(f"Directory '{model_dir}' created successfully.")
+        
+#     # Save the best model parameters after all epochs
+#     if best_model_params is not None:
+#         model_path = os.path.join(model_dir, f"best_model_stage_Q_{stage_number}_{sample_size}_W_estimator_{params['f_model']}_config_number_{config_number}_result_{resNum}.pt")
+#         torch.save(best_model_params, model_path)
+
+#     return train_losses, val_losses, epoch_num_model
+
+
+
+
 
 def train_and_validate_W_estimator(config_number, model, optimizer, scheduler, train_inputs, train_actions, train_targets, val_inputs, val_actions, val_targets, batch_size, device, n_epoch, stage_number, sample_size, params, resNum):
     train_losses, val_losses = [], []
@@ -1253,6 +1296,206 @@ def train_and_validate_W_estimator(config_number, model, optimizer, scheduler, t
         os.makedirs(model_dir)
         print(f"Directory '{model_dir}' created successfully.")
         
+    # Save the best model parameters after all epochs
+    if best_model_params is not None:
+        model_path = os.path.join(model_dir, f"best_model_stage_Q_{stage_number}_{sample_size}_W_estimator_{params['f_model']}_config_number_{config_number}_result_{resNum}.pt")
+        torch.save(best_model_params, model_path)
+
+    return train_losses, val_losses, epoch_num_model
+
+
+
+
+from torch.utils.data import DataLoader, Dataset
+
+class QLearningDataset(Dataset):
+    def __init__(self, data):
+        self.inputs = data['inputs']
+        self.actions = data['actions']
+        self.targets = data['targets']
+    
+    def __len__(self):
+        return self.inputs.shape[0]
+    
+    def __getitem__(self, idx):
+        return {
+            'inputs': self.inputs[idx],
+            'actions': self.actions[idx],
+            'targets': self.targets[idx]
+        }
+
+# def train_and_validate_W_estimator_V2(config_number, model, optimizer, scheduler, train_data, val_data, batch_size, device, n_epoch, stage_number, sample_size, params, resNum):
+#     train_losses, val_losses = [], []
+#     best_val_loss = float('inf')
+#     best_model_params = None
+#     epoch_num_model = 0
+
+#     # Prepare DataLoaders for training and validation
+#     train_dataset = QLearningDataset(train_data)
+#     val_dataset = QLearningDataset(val_data)
+#     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+#     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+
+#     for epoch in range(n_epoch):
+#         # Training phase
+#         model.train()
+#         running_train_loss = 0.0
+#         for batch in train_loader:
+#             inputs_batch = batch['inputs'].to(device)
+#             actions_batch = batch['actions'].to(device)
+#             targets_batch = batch['targets'].to(device)
+
+#             # Combine inputs and actions for model input
+#             combined_inputs = torch.cat((inputs_batch, actions_batch.unsqueeze(-1)), dim=1)
+#             outputs = model(combined_inputs)
+            
+#             # Compute loss
+#             loss = F.mse_loss(outputs.view(-1), targets_batch)
+#             optimizer.zero_grad()
+#             loss.backward()
+#             optimizer.step()
+#             running_train_loss += loss.item()
+
+#         avg_train_loss = running_train_loss / len(train_loader)
+#         train_losses.append(avg_train_loss)
+
+#         # Validation phase
+#         model.eval()
+#         running_val_loss = 0.0
+#         with torch.no_grad():
+#             for batch in val_loader:
+#                 inputs_batch = batch['inputs'].to(device)
+#                 actions_batch = batch['actions'].to(device)
+#                 targets_batch = batch['targets'].to(device)
+
+#                 combined_inputs = torch.cat((inputs_batch, actions_batch.unsqueeze(-1)), dim=1)
+#                 outputs = model(combined_inputs)
+#                 val_loss = F.mse_loss(outputs.view(-1), targets_batch)
+#                 running_val_loss += val_loss.item()
+
+#         avg_val_loss = running_val_loss / len(val_loader)
+#         val_losses.append(avg_val_loss)
+
+#         # Check for improvement and save the best model parameters
+#         if avg_val_loss < best_val_loss:
+#             epoch_num_model = epoch
+#             best_val_loss = avg_val_loss
+#             best_model_params = model.state_dict()
+
+#         # Update the scheduler with the current epoch's validation loss
+#         update_scheduler(scheduler, params, avg_val_loss)
+
+#     # Define file paths for saving models
+#     model_dir = f"models/{params['job_id']}"
+#     if not os.path.exists(model_dir):
+#         os.makedirs(model_dir)
+        
+#     # Save the best model parameters after all epochs
+#     if best_model_params is not None:
+#         model_path = os.path.join(model_dir, f"best_model_stage_Q_{stage_number}_{sample_size}_W_estimator_{params['f_model']}_config_number_{config_number}_result_{resNum}.pt")
+#         torch.save(best_model_params, model_path)
+
+#     return train_losses, val_losses, epoch_num_model
+
+
+def train_and_validate_W_estimator_V2(config_number, model, optimizer, scheduler, train_data, val_data, batch_size, device, n_epoch, stage_number, sample_size, params, resNum):
+    train_losses, val_losses = [], []
+    best_val_loss = float('inf')
+    best_model_params = None
+    epoch_num_model = 0
+
+    # Parameters for frequent validation
+    eval_freq = params.get('eval_freq', 10)  # Frequency to evaluate on validation set (in number of batches)
+    early_stop_patience = params.get('stabilization_patience', 5)  # For early stopping
+    no_improvement_count = 0  # Track validation improvement
+    ema_val_loss = None  # For exponential moving average validation loss
+    ema_alpha = params.get('ema_alpha', 0.9)  # EMA smoothing factor
+
+    # Prepare DataLoaders for training and validation
+    train_dataset = QLearningDataset(train_data)
+    val_dataset = QLearningDataset(val_data)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+
+    total_steps = 0  # Track total steps across epochs for eval_freq
+
+    for epoch in range(n_epoch):
+        # Training phase
+        model.train()
+        running_train_loss = 0.0
+        for batch_idx, batch in enumerate(train_loader):
+            inputs_batch = batch['inputs'].to(device)
+            actions_batch = batch['actions'].to(device)
+            targets_batch = batch['targets'].to(device)
+
+            # Combine inputs and actions for model input
+            combined_inputs = torch.cat((inputs_batch, actions_batch.unsqueeze(-1)), dim=1)
+            outputs = model(combined_inputs)[0]
+            
+            # Compute loss after confirming `outputs` is a tensor
+            loss = F.mse_loss(outputs.view(-1), targets_batch)
+
+            optimizer.zero_grad()
+            # loss.backward() 
+            loss.backward(retain_graph=True)  
+            optimizer.step()
+            running_train_loss += loss.item()
+            total_steps += 1
+
+            # Evaluate validation loss every `eval_freq` steps
+            if total_steps % eval_freq == 0:
+                model.eval()
+                running_val_loss = 0.0
+                with torch.no_grad():
+                    for val_batch in val_loader:
+                        inputs_batch = val_batch['inputs'].to(device)
+                        actions_batch = val_batch['actions'].to(device)
+                        targets_batch = val_batch['targets'].to(device)
+
+                        combined_inputs = torch.cat((inputs_batch, actions_batch.unsqueeze(-1)), dim=1)
+                        outputs = model(combined_inputs)[0]
+                        
+                        # Ensure `outputs` is a tensor if it’s returned as a list
+                        # Proceed with loss calculation
+                        val_loss = F.mse_loss(outputs.view(-1), targets_batch)
+                        
+                        running_val_loss += val_loss.item()
+
+                avg_val_loss = running_val_loss / len(val_loader)
+                val_losses.append(avg_val_loss)
+
+                # Calculate EMA of validation loss
+                if ema_val_loss is None:
+                    ema_val_loss = avg_val_loss
+                else:
+                    ema_val_loss = ema_alpha * avg_val_loss + (1 - ema_alpha) * ema_val_loss
+
+                # Check if this is the best validation loss so far
+                if ema_val_loss < best_val_loss:
+                    epoch_num_model = epoch
+                    best_val_loss = ema_val_loss
+                    best_model_params = model.state_dict()
+                    no_improvement_count = 0  # Reset early stopping counter
+                else:
+                    no_improvement_count += 1  # Increment early stopping counter
+
+                # Early stopping check
+                if no_improvement_count >= early_stop_patience:
+                    print(f"Early stopping triggered at epoch {epoch + 1} due to no improvement.")
+                    break
+
+                # Update scheduler based on the current EMA validation loss
+                update_scheduler(scheduler, params, ema_val_loss)
+
+        # Average training loss for the epoch
+        avg_train_loss = running_train_loss / len(train_loader)
+        train_losses.append(avg_train_loss)
+
+    # Define file paths for saving models
+    model_dir = f"models/{params['job_id']}"
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
+
     # Save the best model parameters after all epochs
     if best_model_params is not None:
         model_path = os.path.join(model_dir, f"best_model_stage_Q_{stage_number}_{sample_size}_W_estimator_{params['f_model']}_config_number_{config_number}_result_{resNum}.pt")
@@ -1381,80 +1624,163 @@ def valFn_estimate(Qhat1_H1d1, Qhat2_H2d2, Qhat1_H1A1, Qhat2_H2A2, A1_tensor, A2
 
 
 
-def train_and_evaluate(train_data, val_data, test_data, params, config_number, resNum):
+# def train_and_evaluate(train_data, val_data, test_data, params, config_number, resNum):
         
-    # Extracting elements
+#     # Extracting elements
     
+#     train_tensors, A1_train, A2_train, _, _ = train_data
+#     val_tensors, A1_val, A2_val = val_data
+#     test_tensors, A1_test, A2_test, P_A1_given_H1_tensor_test, P_A2_given_H2_tensor_test = test_data
+    
+    
+#     train_input_stage1, train_input_stage2, train_Y1, train_Y2, train_A1, train_A2 = train_tensors
+#     val_input_stage1, val_input_stage2, val_Y1, val_Y2, val_A1, val_A2 = val_tensors
+#     test_input_stage1, test_input_stage2, test_Y1, test_Y2, test_A1, test_A2 = test_tensors
+    
+#     nn_stage2, optimizer_2, scheduler_2 = initialize_model_and_optimizer(params, 2)
+#     train_losses_stage2, val_losses_stage2, epoch_num_model_2 = train_and_validate_W_estimator(config_number, nn_stage2, optimizer_2, scheduler_2,
+#                                                                                                train_input_stage2, train_A2, train_Y2,
+#                                                                                                val_input_stage2, val_A2, val_Y2, 
+#                                                                                                params['batch_size'], device, params['n_epoch'], 2,
+#                                                                                                params['sample_size'], params, resNum)
+    
+    
+#     model_dir = f"models/{params['job_id']}"
+#     model_filename = f"best_model_stage_Q_{2}_{params['sample_size']}_W_estimator_{params['f_model']}_config_number_{config_number}_result_{resNum}.pt"
+#     model_path = os.path.join(model_dir, model_filename)
+#     nn_stage2.load_state_dict(torch.load(model_path, map_location=params['device']))
+#     nn_stage2.eval()
+    
+#     combined_inputs2 = torch.cat((train_input_stage2, A2_train.unsqueeze(-1)), dim=1)
+#     test_tr_outputs_stage2 = nn_stage2(combined_inputs2)[0]  
+#     train_Y1_hat = test_tr_outputs_stage2.squeeze(1) + train_Y1 # pseudo outcome
+
+
+#     combined_inputs2val = torch.cat((val_input_stage2, A2_val.unsqueeze(-1)), dim=1)
+#     test_val_outputs_stage2 = nn_stage2(combined_inputs2val)[0]  
+#     val_Y1_hat = test_val_outputs_stage2.squeeze() + val_Y1 # pseudo outcome
+
+
+#     nn_stage1, optimizer_1, scheduler_1 = initialize_model_and_optimizer(params, 1)
+#     train_losses_stage1, val_losses_stage1, epoch_num_model_1 = train_and_validate_W_estimator(config_number, nn_stage1, optimizer_1, scheduler_1, 
+#                                                                                                train_input_stage1, train_A1, train_Y1_hat, 
+#                                                                                                val_input_stage1, val_A1, val_Y1_hat, 
+#                                                                                                params['batch_size'], device, 
+#                                                                                                params['n_epoch'], 1, 
+#                                                                                                params['sample_size'], params, resNum)    
+#     model_dir = f"models/{params['job_id']}"
+#     model_filename = f"best_model_stage_Q_{1}_{params['sample_size']}_W_estimator_{params['f_model']}_config_number_{config_number}_result_{resNum}.pt"
+#     model_path = os.path.join(model_dir, model_filename)
+#     nn_stage1.load_state_dict(torch.load(model_path, map_location=params['device']))
+#     nn_stage1.eval()
+
+
+
+#     combined_inputs2 = torch.cat((test_input_stage2, A2_test.unsqueeze(-1)), dim=1)
+#     Qhat2_H2d2 = nn_stage2(combined_inputs2)[0]  
+
+#     combined_inputs1 = torch.cat((test_input_stage1, A1_test.unsqueeze(-1)), dim=1)
+#     Qhat1_H1d1 = nn_stage1(combined_inputs1)[0]  
+
+
+#     combined_inputs2 = torch.cat((test_input_stage2, test_A2.unsqueeze(-1)), dim=1)
+#     Qhat2_H2A2 = nn_stage2(combined_inputs2)[0]  
+
+#     combined_inputs1 = torch.cat((test_input_stage1, test_A1.unsqueeze(-1)), dim=1)
+#     Qhat1_H1A1 = nn_stage1(combined_inputs1)[0] 
+    
+
+#     V_replications_M1_pred = valFn_estimate(Qhat1_H1d1, Qhat2_H2d2, 
+#                                             Qhat1_H1A1, Qhat2_H2A2, 
+#                                             test_A1, test_A2, 
+#                                             A1_test, A2_test,
+#                                             test_Y1, test_Y2, 
+#                                             P_A1_given_H1_tensor_test, P_A2_given_H2_tensor_test)
+
+#     return V_replications_M1_pred 
+
+
+def train_and_evaluate(train_data, val_data, test_data, params, config_number, resNum):
+    # Extracting elements
     train_tensors, A1_train, A2_train, _, _ = train_data
     val_tensors, A1_val, A2_val = val_data
     test_tensors, A1_test, A2_test, P_A1_given_H1_tensor_test, P_A2_given_H2_tensor_test = test_data
     
-    
+    # Unpacking tensors for each stage
     train_input_stage1, train_input_stage2, train_Y1, train_Y2, train_A1, train_A2 = train_tensors
     val_input_stage1, val_input_stage2, val_Y1, val_Y2, val_A1, val_A2 = val_tensors
     test_input_stage1, test_input_stage2, test_Y1, test_Y2, test_A1, test_A2 = test_tensors
     
+    # Stage 2 Training
     nn_stage2, optimizer_2, scheduler_2 = initialize_model_and_optimizer(params, 2)
-    train_losses_stage2, val_losses_stage2, epoch_num_model_2 = train_and_validate_W_estimator(config_number, nn_stage2, optimizer_2, scheduler_2,
-                                                                                               train_input_stage2, train_A2, train_Y2,
-                                                                                               val_input_stage2, val_A2, val_Y2, 
-                                                                                               params['batch_size'], device, params['n_epoch'], 2,
-                                                                                               params['sample_size'], params, resNum)
-    
-    
+
+    # Prepare inputs for training and validation DataLoader
+    train_stage2_data = {
+        'inputs': train_input_stage2, 'actions': train_A2, 'targets': train_Y2
+    }
+    val_stage2_data = {
+        'inputs': val_input_stage2, 'actions': val_A2, 'targets': val_Y2
+    }
+
+    # Call train_and_validate_W_estimator_V2 with DataLoader-ready data
+    train_losses_stage2, val_losses_stage2, epoch_num_model_2 = train_and_validate_W_estimator_V2(
+        config_number, nn_stage2, optimizer_2, scheduler_2,
+        train_stage2_data, val_stage2_data, params['batch_size'], params['device'], params['n_epoch'], 
+        stage_number=2, sample_size=params['sample_size'], params=params, resNum=resNum
+    )
+
+    # Load the best saved model parameters for nn_stage2
     model_dir = f"models/{params['job_id']}"
-    model_filename = f"best_model_stage_Q_{2}_{params['sample_size']}_W_estimator_{params['f_model']}_config_number_{config_number}_result_{resNum}.pt"
+    model_filename = f"best_model_stage_Q_2_{params['sample_size']}_W_estimator_{params['f_model']}_config_number_{config_number}_result_{resNum}.pt"
     model_path = os.path.join(model_dir, model_filename)
     nn_stage2.load_state_dict(torch.load(model_path, map_location=params['device']))
     nn_stage2.eval()
     
+    # Compute pseudo outcomes for stage 1 training
     combined_inputs2 = torch.cat((train_input_stage2, A2_train.unsqueeze(-1)), dim=1)
-    test_tr_outputs_stage2 = nn_stage2(combined_inputs2)[0]  
-    train_Y1_hat = test_tr_outputs_stage2.squeeze(1) + train_Y1 # pseudo outcome
-
+    train_Y1_hat = nn_stage2(combined_inputs2)[0].squeeze(1) + train_Y1  # pseudo outcome for stage 1
 
     combined_inputs2val = torch.cat((val_input_stage2, A2_val.unsqueeze(-1)), dim=1)
-    test_val_outputs_stage2 = nn_stage2(combined_inputs2val)[0]  
-    val_Y1_hat = test_val_outputs_stage2.squeeze() + val_Y1 # pseudo outcome
+    val_Y1_hat = nn_stage2(combined_inputs2val)[0].squeeze() + val_Y1  # pseudo outcome for stage 1 validation
 
-
+    # Stage 1 Training
     nn_stage1, optimizer_1, scheduler_1 = initialize_model_and_optimizer(params, 1)
-    train_losses_stage1, val_losses_stage1, epoch_num_model_1 = train_and_validate_W_estimator(config_number, nn_stage1, optimizer_1, scheduler_1, 
-                                                                                               train_input_stage1, train_A1, train_Y1_hat, 
-                                                                                               val_input_stage1, val_A1, val_Y1_hat, 
-                                                                                               params['batch_size'], device, 
-                                                                                               params['n_epoch'], 1, 
-                                                                                               params['sample_size'], params, resNum)    
-    model_dir = f"models/{params['job_id']}"
-    model_filename = f"best_model_stage_Q_{1}_{params['sample_size']}_W_estimator_{params['f_model']}_config_number_{config_number}_result_{resNum}.pt"
-    model_path = os.path.join(model_dir, model_filename)
-    nn_stage1.load_state_dict(torch.load(model_path, map_location=params['device']))
-    nn_stage1.eval()
+    
+    # Prepare inputs for training and validation DataLoader
+    train_stage1_data = {
+        'inputs': train_input_stage1, 'actions': train_A1, 'targets': train_Y1_hat
+    }
+    val_stage1_data = {
+        'inputs': val_input_stage1, 'actions': val_A1, 'targets': val_Y1_hat
+    }
 
+    # Call train_and_validate_W_estimator_V2 for Stage 1
+    train_losses_stage1, val_losses_stage1, epoch_num_model_1 = train_and_validate_W_estimator_V2(
+        config_number, nn_stage1, optimizer_1, scheduler_1,
+        train_stage1_data, val_stage1_data, params['batch_size'], params['device'], params['n_epoch'], 
+        stage_number=1, sample_size=params['sample_size'], params=params, resNum=resNum
+    )
 
-
+    # Test Evaluation
     combined_inputs2 = torch.cat((test_input_stage2, A2_test.unsqueeze(-1)), dim=1)
     Qhat2_H2d2 = nn_stage2(combined_inputs2)[0]  
 
     combined_inputs1 = torch.cat((test_input_stage1, A1_test.unsqueeze(-1)), dim=1)
     Qhat1_H1d1 = nn_stage1(combined_inputs1)[0]  
 
-
     combined_inputs2 = torch.cat((test_input_stage2, test_A2.unsqueeze(-1)), dim=1)
     Qhat2_H2A2 = nn_stage2(combined_inputs2)[0]  
 
     combined_inputs1 = torch.cat((test_input_stage1, test_A1.unsqueeze(-1)), dim=1)
     Qhat1_H1A1 = nn_stage1(combined_inputs1)[0] 
-    
 
-    V_replications_M1_pred = valFn_estimate(Qhat1_H1d1, Qhat2_H2d2, 
-                                            Qhat1_H1A1, Qhat2_H2A2, 
-                                            test_A1, test_A2, 
-                                            A1_test, A2_test,
+    V_replications_M1_pred = valFn_estimate(Qhat1_H1d1, Qhat2_H2d2, Qhat1_H1A1, Qhat2_H2A2, 
+                                            test_A1, test_A2, A1_test, A2_test,
                                             test_Y1, test_Y2, 
                                             P_A1_given_H1_tensor_test, P_A2_given_H2_tensor_test)
 
-    return V_replications_M1_pred 
+    return V_replications_M1_pred
+
 
 
 
@@ -1499,6 +1825,9 @@ def calculate_policy_values_W_estimator(train_tens, params, A1, A2, P_A1_given_H
     # Swap training/validation with testing, then test becomes train_val
     result2 = train_and_evaluate(test_data, val_data, train_data, params, config_number, resNum = 2)
     
+    
+    print()
+    print("--"*60)
     print("calculate_policy_values_W_estimator: ", result1, result2)
     
     return (result1+result2)/2
@@ -1575,15 +1904,15 @@ def evaluate_method_DS(method_name, params, config_number, df, test_input_stage1
     A1 = max_voting(A1_ensemble)  # Output of shape (num_samples,) with voted actions for A1
     A2 = max_voting(A2_ensemble)  # Output of shape (num_samples,) with voted actions for A2
 
-    # Print top 20 ensemble predictions and their corresponding majority votes in a stacked format
-    print("\nTop 20 Ensemble Predictions and Majority Votes for A1 (stacked format):")
-    for i in range(20):
+    # Print top 5 ensemble predictions and their corresponding majority votes in a stacked format
+    print("\nTop 5 Ensemble Predictions and Majority Votes for A1 (stacked format):")
+    for i in range(5):
         print(f"Sample {i+1}:")
         stacked_A1 = torch.cat([A1_ensemble[:, i], A1[i].unsqueeze(0)])  # Stack ensemble predictions and majority vote
         print(f"  Ensemble A1 predictions + Voted A1 action: {stacked_A1.tolist()}")  # Print stacked format
 
-    print("\nTop 20 Ensemble Predictions and Majority Votes for A2 (stacked format):")
-    for i in range(20):
+    print("\nTop 5 Ensemble Predictions and Majority Votes for A2 (stacked format):")
+    for i in range(5):
         print(f"Sample {i+1}:")
         stacked_A2 = torch.cat([A2_ensemble[:, i], A2[i].unsqueeze(0)])  # Stack ensemble predictions and majority vote
         print(f"  Ensemble A2 predictions + Voted A2 action: {stacked_A2.tolist()}")  # Print stacked format
@@ -2618,7 +2947,9 @@ def eval_DTR(V_replications, num_replications, df_DQL, df_DS, df_Tao, params_dql
         V_replications["V_replications_M1_pred"]["DS"].append(V_rep_DS)
 
         message = f'Y1_DS+Y2_DS mean: {V_rep_DS} \n'
-        print(message)         
+        print(message)  
+        print("--"*60)
+
         print(f"Total time taken to run evaluate_method ('DS'): { end_time - start_time} seconds")
         print("="*60)
         print()
@@ -3051,7 +3382,7 @@ def main():
         'activation_function': ['elu'], # elu, relu, sigmoid, tanh, leakyrelu, none
         'num_layers': [4], # 2,4
         'optimizer_lr': [0.07], # 0.1, 0.01, 0.07, 0.001
-        # 'n_epoch':[60]
+        # 'n_epoch':[60] 
     }
 
 
